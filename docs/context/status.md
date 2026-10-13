@@ -1,0 +1,25 @@
+# Status
+
+- [x] Plan approved, context docs written
+- [x] Packaging (pyproject, .gitignore, .env.example)
+- [x] Core: events, bus, BaseAgent, settings, orchestrator
+- [x] Session: SQLAlchemy models, dataclass records, store (Postgres + in-memory), logger, export
+- [x] LLM: models, chains, prompts, rolling history
+- [x] Specialists: conversor, screen analyzer, chat
+- [x] Perception: manual input, screen, audio
+- [x] CLI + console output
+- [x] Tests: 27 unit/integration pass, 4 Postgres (`-m db`) pass
+- [x] Screen path verified end to end (2026-09-30): hotkey -> Tesseract OCR -> Screen Analyzer (Sonnet) solved LeetCode Two Sum
+- [x] Audio path verified (2026-09-30): loopback capture + Whisper transcribed a spoken sentence; fixed a hang in silence
+- [x] Mic path verified (default on); `devices` command and `AUDIO_MIC_DEVICE` added. Open: user's own voice was not recognised in a test recording (level/positioning?), see status line 'Hearing mic audio (level X)'
+- [x] Conversor is manual-only (Suggest button / hotkey / `/suggest`) to avoid wasting tokens
+- [ ] Check with a real Conversor call (audio -> Claude) and the typed Chat path
+- [x] Tesseract installed at C:\Program Files\Tesseract-OCR\tesseract.exe (set TESSERACT_CMD in .env)
+- [x] User context files: ./context/ (resume, JD, notes) injected into Conversor and Chat prompts
+- [x] PyQt6 overlay: dark always-on-top panel, hidden from capture (verified with mss), hotkeys, chat input; tests in tests/unit/test_overlay.py
+- [x] Transcription speed: GPU Whisper (10x) + mic utterance segmentation; ~1 s from end of speech to text
+- [x] Shared session memory across Conversor / Screen Analyzer / Chat (screen + speech + answers in one timeline)
+- [x] Exe build script (`build_exe.ps1`), launcher, self-test, quit hotkey (see architecture.md 'Packaging as an exe')
+- [x] Exe built and verified live (tool window, no tray/console, clean close); `.env` is NOT copied unless `-IncludeEnv`
+- [ ] Overlay used in a real meeting (audio + hotkey together); no tray icon or settings UI yet
+- [ ] Schema migrations (currently `create_all` only)

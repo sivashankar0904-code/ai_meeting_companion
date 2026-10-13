@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.env
+data/
+
+# Personal context documents (keep the README)
+context/*
+!context/README.md
+
+# Build output and runtime files
+dist/
+build/
+*.spec
+selftest.txt
+*.log
+overlay_position.json
