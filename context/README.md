@@ -1,6 +1,6 @@
 # Your context files
 
-Put your own background here as `.md` or `.txt` files, for example:
+Put your own background here as `.md` files, for example:
 
 - `resume.md` - your experience, projects, skills, numbers
 - `job_description.md` - the role you are interviewing for

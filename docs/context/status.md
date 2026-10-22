@@ -21,5 +21,7 @@
 - [x] Shared session memory across Conversor / Screen Analyzer / Chat (screen + speech + answers in one timeline)
 - [x] Exe build script (`build_exe.ps1`), launcher, self-test, quit hotkey (see architecture.md 'Packaging as an exe')
 - [x] Exe built and verified live (tool window, no tray/console, clean close); `.env` is NOT copied unless `-IncludeEnv`
+- [x] Conversor reworked after a poor real interview (2026-10-08): crisp grounded bullets, no invented facts, mic echo filter, default model Haiku 5.5 (see architecture.md 'Conversor behaviour')
+- [x] Hotkeys no longer leak to Teams (Ctrl+Shift+H left the meeting); they are swallowed by `hotkeys.py`
 - [ ] Overlay used in a real meeting (audio + hotkey together); no tray icon or settings UI yet
 - [ ] Schema migrations (currently `create_all` only)

@@ -28,5 +28,7 @@ def export_markdown(store: SessionStore, thread_id: UUID) -> str:
             who = f"error:{m.agent}"
         elif m.speaker:
             who = f"{who} ({m.speaker})"
+        elif channel := (m.metadata or {}).get("channel"):
+            who = f"{who} ({channel})"
         lines += [f"**[{m.created_at:%H:%M:%S}] {who}**", "", m.message_content, ""]
     return "\n".join(lines)

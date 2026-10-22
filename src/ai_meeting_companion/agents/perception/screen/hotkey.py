@@ -9,6 +9,6 @@ class HotkeyListener(Protocol):
 
 
 def make_hotkey_listener(hotkey: str, callback: Callable[[], None]) -> HotkeyListener:
-    from pynput import keyboard
+    from ai_meeting_companion.hotkeys import GlobalHotkeys
 
-    return keyboard.GlobalHotKeys({hotkey: callback})
+    return GlobalHotkeys({hotkey: callback})

@@ -306,6 +306,10 @@ class OverlayWindow(QWidget):
         elif event.kind == ERROR:
             self._append(f"error · {event.payload.get('agent') or event.source}", ERROR_COLOR, text)
 
+    def add_note(self, header: str, markdown: str, warning: bool = False) -> None:
+        """A message from the app itself (not an agent), e.g. which context files were loaded."""
+        self._append(header, ERROR_COLOR if warning else MUTED, markdown)
+
     def _append(self, header: str, color: str, markdown: str) -> None:
         bar = self.feed.verticalScrollBar()
         at_bottom = bar.value() >= bar.maximum() - 4

@@ -8,7 +8,7 @@ from uuid import UUID
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication
 
-from ai_meeting_companion.config import Settings
+from ai_meeting_companion.config import PROJECT_ROOT, Settings
 from ai_meeting_companion.core.agent import BaseAgent
 from ai_meeting_companion.core.bus import Bus
 from ai_meeting_companion.core.orchestrator import Orchestrator
@@ -24,8 +24,12 @@ def run_overlay(
     store: SessionStore,
     build_agents: Callable[[Bus, SessionMemory], Sequence[BaseAgent]],
     title: str | None = None,
+    context_files: Sequence[str] = (),
 ) -> UUID:
-    """Run one session with the overlay as the UI. Blocks until the overlay is quit."""
+    """Run one session with the overlay as the UI. Blocks until the overlay is quit.
+
+    ``context_files`` are the background files that were loaded; shown at the top of the feed,
+    since the windowed exe has no console to print them to."""
     app = QApplication.instance() or QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)  # hiding the overlay (hotkey) must not end the program
     controller = OverlayController()
@@ -59,6 +63,11 @@ def run_overlay(
     )
 
     thread_id = orch.start()
+    if context_files:
+        window.add_note("context", "Using " + ", ".join(context_files))
+    else:
+        folder = PROJECT_ROOT / settings.context_dir
+        window.add_note("context", f"No context files: answers cannot use your resume. Add .md files to `{folder}` and restart.", warning=True)
     window.show()
     try:
         app.exec()

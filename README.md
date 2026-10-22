@@ -7,7 +7,7 @@ Windows meeting assistant: listens to audio, reads the screen, and suggests answ
 2. Install the Tesseract binary and make sure it is on PATH (or set `TESSERACT_CMD`).
 3. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY` and the DB settings. Postgres must be running.
 
-4. Put your resume, job description and notes (`.md`/`.txt`) in `context/`. The Conversor and Chat agent use them to tailor suggested answers (see `context/README.md`).
+4. Put your resume, job description and notes (`.md` files) in `context/`. The Conversor and Chat agent use them to tailor suggested answers (see `context/README.md`).
 
 ## Run
 ```

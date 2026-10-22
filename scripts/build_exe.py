@@ -36,7 +36,7 @@ EXCLUDES = ["tkinter", "matplotlib", "pytest", "IPython", "notebook"]
 HOW_TO = """AI Meeting Companion
 
 1. Copy .env.example to .env (in this folder) and fill in ANTHROPIC_API_KEY and the DB_* settings.
-2. Put your resume / job description / notes (.md or .txt) in the context\\ folder.
+2. Put your resume / job description / notes (.md files) in the context\\ folder.
 3. Double-click {exe}. There is no window in the taskbar and no tray icon: the overlay appears
    top-right. Hotkeys (change them in .env):
      Ctrl+Shift+H  show / hide         Ctrl+Shift+A  suggest an answer   Ctrl+Shift+S  screenshot

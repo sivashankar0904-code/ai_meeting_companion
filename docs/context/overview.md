@@ -17,7 +17,7 @@ A headless pipeline of cooperating agents (PyQt6 overlay comes later):
 ## Specialist agents
 | Agent | Input event | Default model | Job |
 |---|---|---|---|
-| Conversor | `transcript` (buffered; model called only on `suggest_request`) | `claude-haiku-4-5-20251001` | Identify interviewer vs interviewee, track roles, suggest an answer when the interviewer asks a question. |
+| Conversor | `transcript` (buffered; model called only on `suggest_request`) | `claude-haiku-5-5` | Identify interviewer vs interviewee, track roles, suggest an answer when the interviewer asks a question. |
 | Screen Analyzer | `screen_text` | `claude-sonnet-5-5` | Work out what problem is on screen, then solve it. |
 | Chat | `user_message` | `claude-sonnet-5-5` | Manual chatbot; also sees recent transcript and screen text. |
 

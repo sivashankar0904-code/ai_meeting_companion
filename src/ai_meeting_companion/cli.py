@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"suggest answer {settings.suggest_hotkey}, type {settings.overlay_focus_hotkey}, click-through {settings.overlay_clickthrough_hotkey}, quit {settings.overlay_quit_hotkey}"
                     + (f", screenshot {settings.hotkey}" if not args.no_screen else "")
                 )
-                thread_id = run_overlay(settings, store, build, title=args.title)
+                thread_id = run_overlay(settings, store, build, title=args.title, context_files=docs.files)
             else:
                 print("Session running. Type a question and press Enter to chat, /suggest to send what was heard to the Conversor; Ctrl+C to stop.")
                 if not args.no_screen:

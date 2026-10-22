@@ -6,7 +6,7 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-EXTENSIONS = {".md", ".txt"}
+EXTENSIONS = {".md"}
 MAX_CHARS = 30_000  # total across all files; keeps the system prompt (and cost) bounded
 
 
@@ -22,7 +22,7 @@ class ContextDocs:
 def load_context_docs(directory: Path, max_chars: int = MAX_CHARS) -> ContextDocs:
     """Read the user's own background files (resume, job description, notes).
 
-    Every .md/.txt file in ``directory`` is included, in name order. ``README.md`` and
+    Every .md file in ``directory`` is included, in name order. ``README.md`` and
     files starting with ``_`` are skipped. A missing folder just means no context.
     """
     if not directory.is_dir():

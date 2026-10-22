@@ -70,7 +70,7 @@ class DbSettings:
 @dataclass(frozen=True)
 class Settings:
     anthropic_api_key: str
-    conversor_model: str = "claude-haiku-4-5-20251001"
+    conversor_model: str = "claude-haiku-5-5"
     screen_model: str = "claude-sonnet-5-5"
     chat_model: str = "claude-sonnet-5-5"
     db: DbSettings = DbSettings()
