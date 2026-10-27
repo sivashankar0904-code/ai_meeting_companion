@@ -6,8 +6,8 @@
     python scripts/build_exe.py --include-env        # also copy your .env (contains your API key!)
 
 Result: dist/<name>/<name>.exe, a windowed app (no console, no taskbar button, no tray icon), with
-your ``context/`` folder, ``.env.example`` and (optionally) Tesseract next to it. Everything the user
-edits lives beside the exe, never inside it: .env, context/, tesseract/.
+your ``context/`` folder, ``.env.example``, a ``source/`` copy of the project and (optionally)
+Tesseract next to it. Everything the user edits lives beside the exe, never inside it: .env, context/, tesseract/.
 """
 
 from __future__ import annotations
@@ -114,6 +114,20 @@ def build(args: argparse.Namespace) -> Path:
     return dist / args.name
 
 
+# Left out of the project copy: environments, VCS, build output (dist lives inside the project, so copying it
+# would recurse), and personal data. ``context/`` is copied beside the exe on its own, and ``.env`` only via
+# --include-env.
+PROJECT_SKIP_TOP = {".venv", "venv", ".git", ".claude", ".pytest_cache", "build", "dist", "context", "projects", "data"}
+PROJECT_SKIP_ANY = {"__pycache__", ".env", "overlay_position.json", "selftest.txt"}
+
+
+def project_ignore(directory: str, names: list[str]) -> set[str]:
+    skip = {n for n in names if n in PROJECT_SKIP_ANY or n.endswith((".egg-info", ".log"))}
+    if Path(directory).resolve() == ROOT:
+        skip |= {n for n in names if n in PROJECT_SKIP_TOP}
+    return skip
+
+
 def add_user_files(app: Path, args: argparse.Namespace) -> None:
     exe = f"{args.name}.exe"
 
@@ -123,6 +137,9 @@ def add_user_files(app: Path, args: argparse.Namespace) -> None:
                         ignore=shutil.ignore_patterns("__pycache__"))
     else:
         (app / "context").mkdir(exist_ok=True)
+
+    shutil.copytree(ROOT, app / "source", dirs_exist_ok=True, ignore=project_ignore)
+    print(f"Copied the project folder to {app / 'source'}")
 
     shutil.copy2(ROOT / ".env.example", app / ".env.example")
     if args.include_env:

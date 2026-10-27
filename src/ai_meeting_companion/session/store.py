@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import threading
+import time
 from dataclasses import asdict, replace
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 from uuid import UUID, uuid4
 
 from sqlalchemy import create_engine, desc, func, select, text, update
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from ai_meeting_companion.config import DbSettings
@@ -86,15 +88,22 @@ def _to_message(row: ChatMessage) -> Message:
     )
 
 
+CONNECT_TIMEOUT_SECS = 10
+# Notice a peer that vanished (the WSL VM holding Postgres stops when idle) in ~25 s instead of never.
+KEEPALIVE_ARGS = {"keepalives": 1, "keepalives_idle": 10, "keepalives_interval": 5, "keepalives_count": 3}
+
+
 class SqlAlchemySessionStore:
     """PostgreSQL store. Rows go through SQLAlchemy ORM models; callers only see the dataclasses in ``records``."""
 
     def __init__(self, db: DbSettings, schema: str | None = None) -> None:
         self._schema = schema
-        connect_args: dict[str, Any] = {}
+        # Without a timeout, a Postgres that is still starting (WSL/Docker just booted) hangs the app before any
+        # window or message appears; with it, startup fails in seconds and the launcher shows the error.
+        connect_args: dict[str, Any] = {"connect_timeout": CONNECT_TIMEOUT_SECS, **KEEPALIVE_ARGS}
         if schema:
             # Throwaway schema for tests: create it, then pin search_path for every connection.
-            bootstrap = create_engine(db.url(), isolation_level="AUTOCOMMIT")
+            bootstrap = create_engine(db.url(), isolation_level="AUTOCOMMIT", connect_args=dict(connect_args))
             with bootstrap.connect() as conn:
                 conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
             bootstrap.dispose()
@@ -173,3 +182,26 @@ class SqlAlchemySessionStore:
 
     def close(self) -> None:
         self._engine.dispose()
+
+
+def open_store(
+    db: DbSettings,
+    *,
+    wait_secs: float = 60,
+    factory: Callable[[DbSettings], SqlAlchemySessionStore] = SqlAlchemySessionStore,
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
+) -> SqlAlchemySessionStore:
+    """Open the Postgres store, retrying for ``wait_secs`` while the database is still coming up.
+
+    Postgres runs in a WSL container; the WSL VM stops when idle and boots again (10-40 s) when the first
+    connection arrives, so the first attempt after a quiet spell often fails. Only connection errors are retried."""
+    deadline = clock() + wait_secs
+    while True:
+        try:
+            return factory(db)
+        except OperationalError as exc:
+            if clock() >= deadline:
+                raise
+            print(f"Waiting for PostgreSQL at {db.host}:{db.port} ({type(exc.orig).__name__})...", flush=True)
+            sleep(3)

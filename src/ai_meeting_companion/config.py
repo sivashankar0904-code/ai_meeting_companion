@@ -71,6 +71,8 @@ class DbSettings:
 class Settings:
     anthropic_api_key: str
     conversor_model: str = "claude-haiku-5-5"
+    conversor_fast: bool = False  # Anthropic fast mode; only valid with an Opus model (see llm/models.py)
+    conversor_effort: str = ""  # low|medium|high|xhigh|max; empty = the model's default
     screen_model: str = "claude-sonnet-5-5"
     chat_model: str = "claude-sonnet-5-5"
     db: DbSettings = DbSettings()
@@ -90,6 +92,10 @@ class Settings:
     overlay_clickthrough_hotkey: str = "<ctrl>+<shift>+t"
     overlay_focus_hotkey: str = "<ctrl>+<shift>+i"
     overlay_quit_hotkey: str = "<ctrl>+<shift>+q"
+    overlay_move_left_hotkey: str = "<ctrl>+<shift>+<left>"
+    overlay_move_right_hotkey: str = "<ctrl>+<shift>+<right>"
+    overlay_move_up_hotkey: str = "<ctrl>+<shift>+<up>"
+    overlay_move_down_hotkey: str = "<ctrl>+<shift>+<down>"
     audio_mic: bool = True
     audio_mic_device: str = ""
     audio_chunk_secs: float = 6.0
@@ -147,6 +153,8 @@ def load_settings(env: Mapping[str, str] | None = None, *, require_api_key: bool
     return Settings(
         anthropic_api_key=api_key,
         conversor_model=_text(env, "CONVERSOR_MODEL", s.conversor_model),
+        conversor_fast=_flag(env.get("CONVERSOR_FAST"), s.conversor_fast),
+        conversor_effort=env.get("CONVERSOR_EFFORT", "").strip().lower(),
         screen_model=_text(env, "SCREEN_MODEL", s.screen_model),
         chat_model=_text(env, "CHAT_MODEL", s.chat_model),
         db=db,
@@ -166,6 +174,10 @@ def load_settings(env: Mapping[str, str] | None = None, *, require_api_key: bool
         overlay_clickthrough_hotkey=_text(env, "OVERLAY_CLICKTHROUGH_HOTKEY", s.overlay_clickthrough_hotkey),
         overlay_focus_hotkey=_text(env, "OVERLAY_FOCUS_HOTKEY", s.overlay_focus_hotkey),
         overlay_quit_hotkey=_text(env, "OVERLAY_QUIT_HOTKEY", s.overlay_quit_hotkey),
+        overlay_move_left_hotkey=_text(env, "OVERLAY_MOVE_LEFT_HOTKEY", s.overlay_move_left_hotkey),
+        overlay_move_right_hotkey=_text(env, "OVERLAY_MOVE_RIGHT_HOTKEY", s.overlay_move_right_hotkey),
+        overlay_move_up_hotkey=_text(env, "OVERLAY_MOVE_UP_HOTKEY", s.overlay_move_up_hotkey),
+        overlay_move_down_hotkey=_text(env, "OVERLAY_MOVE_DOWN_HOTKEY", s.overlay_move_down_hotkey),
         audio_mic=_flag(env.get("AUDIO_MIC"), s.audio_mic),
         audio_mic_device=env.get("AUDIO_MIC_DEVICE", "").strip(),
         audio_chunk_secs=float(_text(env, "AUDIO_CHUNK_SECS", str(s.audio_chunk_secs))),

@@ -4,7 +4,7 @@ import json
 from html import escape
 from typing import Callable
 
-from PyQt6.QtCore import QObject, QPoint, Qt, pyqtSignal
+from PyQt6.QtCore import QObject, QPoint, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextDocument
 from PyQt6.QtWidgets import (
     QFrame,
@@ -22,6 +22,7 @@ from ai_meeting_companion.core.events import (
     ERROR,
     LLM_RESPONSE,
     SCREEN_TEXT,
+    SCREENSHOT_REQUEST,
     STATUS,
     SUGGEST_REQUEST,
     TRANSCRIPT,
@@ -29,14 +30,15 @@ from ai_meeting_companion.core.events import (
     Event,
 )
 from ai_meeting_companion import config
-from ai_meeting_companion.ui import win32
+from ai_meeting_companion.ui import tiles, win32
+from ai_meeting_companion.ui.icons import make_icon
 
 WIDTH, HEIGHT, MARGIN = 460, 580, 24
 POSITION_FILE = "overlay_position.json"
 HEARD_CHARS = 220
 
 AGENT_COLORS = {"conversor": "#7aa2f7", "screen_analyzer": "#9ece6a", "chat": "#bb9af7"}
-MUTED, ERROR_COLOR = "#8b90a0", "#f7768e"
+MUTED, ERROR_COLOR ="#8b90a0", "#f7768e"
 
 STYLE = """
 #panel { background: rgba(22, 24, 32, 235); border: 1px solid rgba(255,255,255,40); border-radius: 12px; }
@@ -66,6 +68,7 @@ class OverlayController(QObject):
     focus_input = pyqtSignal()
     suggest_requested = pyqtSignal()
     quit_requested = pyqtSignal()
+    move_tile = pyqtSignal(str)  # "left" | "right" | "up" | "down"
 
 
 class OverlayWindow(QWidget):
@@ -106,6 +109,7 @@ class OverlayWindow(QWidget):
         controller.toggle_click_through.connect(self.toggle_click_through)
         controller.focus_input.connect(self.focus_input)
         controller.suggest_requested.connect(self.request_suggestion)
+        controller.move_tile.connect(self.move_to_tile)
 
     # -- layout ---------------------------------------------------------
     def _build(self) -> None:
@@ -124,21 +128,21 @@ class OverlayWindow(QWidget):
         title = QLabel("Meeting Companion")
         title.setObjectName("title")
         self.capture_label = QLabel("")
-        self.suggest_button = QPushButton("Suggest")
-        self.suggest_button.setToolTip("Send what was heard to the Conversor for a suggested answer")
+        self.suggest_button = self._icon_button("suggest", "Send what was heard to the Conversor for a suggested answer")
         self.suggest_button.clicked.connect(lambda _=False: self.controller.suggest_requested.emit())
-        self.click_button = QPushButton("Click-through")
+        self.capture_button = self._icon_button("screenshot", "Capture the screen and have the Screen Analyzer solve it (same as the screenshot hotkey)")
+        self.capture_button.clicked.connect(lambda _=False: self.request_screenshot())
+        self.click_button = self._icon_button("click_through", "Click-through: let mouse clicks pass through the overlay (toggle with the hotkey)")
         self.click_button.setCheckable(True)
-        self.click_button.setToolTip("Let mouse clicks pass through the overlay (toggle with the hotkey)")
         self.click_button.clicked.connect(lambda _=False: self.set_click_through(self.click_button.isChecked()))
-        clear = QPushButton("Clear")
+        clear = self._icon_button("clear", "Clear the feed")
         clear.clicked.connect(self.clear)
-        close = QPushButton("Quit")
+        close = self._icon_button("quit", "Quit and save the session")
         close.clicked.connect(self.controller.quit_requested.emit)
         for w in (title, self.capture_label):
             row.addWidget(w)
         row.addStretch(1)
-        for b in (self.suggest_button, self.click_button, clear, close):
+        for b in (self.suggest_button, self.capture_button, self.click_button, clear, close):
             row.addWidget(b)
         col.addWidget(header)
 
@@ -163,12 +167,29 @@ class OverlayWindow(QWidget):
         bottom.addWidget(QSizeGrip(self), 0, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight)
         col.addLayout(bottom)
 
+    @staticmethod
+    def _icon_button(icon: str, tooltip: str) -> QPushButton:
+        button = QPushButton()
+        button.setIcon(make_icon(icon))
+        button.setIconSize(QSize(16, 16))
+        button.setFixedSize(28, 24)
+        button.setToolTip(tooltip)
+        return button
+
     def _place_top_right(self) -> None:
         screen = QGuiApplication.primaryScreen()
         if screen is None:
             return
         area = screen.availableGeometry()
         self.move(area.right() - WIDTH - MARGIN, area.top() + MARGIN)
+
+    def move_to_tile(self, direction: str) -> None:
+        """Step one cell of the 3x3 screen grid (hopping to a neighbouring screen at the edge)."""
+        areas = [s.availableGeometry() for s in QGuiApplication.screens()]
+        target = tiles.next_position(self.pos(), self.size(), areas, direction, MARGIN)
+        if target is not None:
+            self.move(target)
+            self._save_position()
 
     # -- dragging: press and drag anywhere that is not a button, the feed or the input box ----------
     def mousePressEvent(self, event) -> None:
@@ -232,15 +253,11 @@ class OverlayWindow(QWidget):
             self.capture_hidden = False
         else:
             self.capture_hidden = win32.set_capture_excluded(int(self.winId()), True)
-        if self._hide_from_capture and self.capture_hidden:
-            self.capture_label.setText("hidden from capture")
-            self.capture_label.setStyleSheet("color: #9ece6a;")
-        elif self._hide_from_capture:
-            self.capture_label.setText("VISIBLE to screen share")
-            self.capture_label.setStyleSheet("color: #f7768e;")
-        else:
-            self.capture_label.setText("capture exclusion off")
-            self.capture_label.setStyleSheet("color: #8b90a0;")
+        # Silent when it works (or is switched off); only a refusal by Windows is worth header space.
+        failed = self._hide_from_capture and not self.capture_hidden
+        self.capture_label.setText("VISIBLE to screen share" if failed else "")
+        self.capture_label.setStyleSheet("color: #f7768e;")
+        self.capture_label.setVisible(failed)
 
     # -- visibility / interaction -------------------------------------------
     def toggle_visibility(self) -> None:
@@ -276,6 +293,10 @@ class OverlayWindow(QWidget):
     def request_suggestion(self) -> None:
         if self._publish is not None:
             self._publish(Event(kind=SUGGEST_REQUEST, source="overlay", payload={"text": ""}))
+
+    def request_screenshot(self) -> None:
+        if self._publish is not None:
+            self._publish(Event(kind=SCREENSHOT_REQUEST, source="overlay", payload={"text": ""}))
 
     def clear(self) -> None:
         self.feed.clear()

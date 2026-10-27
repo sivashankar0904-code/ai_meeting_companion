@@ -59,6 +59,10 @@ def run_overlay(
             settings.overlay_focus_hotkey: controller.focus_input.emit,
             settings.suggest_hotkey: controller.suggest_requested.emit,
             settings.overlay_quit_hotkey: controller.quit_requested.emit,
+            settings.overlay_move_left_hotkey: lambda: controller.move_tile.emit("left"),
+            settings.overlay_move_right_hotkey: lambda: controller.move_tile.emit("right"),
+            settings.overlay_move_up_hotkey: lambda: controller.move_tile.emit("up"),
+            settings.overlay_move_down_hotkey: lambda: controller.move_tile.emit("down"),
         }
     )
 

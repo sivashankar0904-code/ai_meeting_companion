@@ -8,7 +8,7 @@ from uuid import UUID
 
 from ai_meeting_companion.config import ConfigError, load_settings
 from ai_meeting_companion.session.export import export_markdown
-from ai_meeting_companion.session.store import SessionStore, SqlAlchemySessionStore
+from ai_meeting_companion.session.store import SessionStore, open_store
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "devices":
         return _print_devices()
 
-    store = SqlAlchemySessionStore(settings.db)
+    store = open_store(settings.db)  # waits up to a minute for Postgres (WSL may still be booting)
     try:
         if args.command == "run":
             from ai_meeting_companion.agents.factory import build_agents, load_docs, speech_terms
@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
 
                 print(
                     f"Overlay running. Hotkeys: show/hide {settings.overlay_toggle_hotkey}, "
-                    f"suggest answer {settings.suggest_hotkey}, type {settings.overlay_focus_hotkey}, click-through {settings.overlay_clickthrough_hotkey}, quit {settings.overlay_quit_hotkey}"
+                    f"suggest answer {settings.suggest_hotkey}, type {settings.overlay_focus_hotkey}, click-through {settings.overlay_clickthrough_hotkey}, quit {settings.overlay_quit_hotkey}, move overlay {settings.overlay_move_left_hotkey} / right / up / down"
                     + (f", screenshot {settings.hotkey}" if not args.no_screen else "")
                 )
                 thread_id = run_overlay(settings, store, build, title=args.title, context_files=docs.files)

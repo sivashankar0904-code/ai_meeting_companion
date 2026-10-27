@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview prep – Audit Automation and IDP</title>
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface2:#f0eee8; --ink:#1d2420; --muted:#59645d; --line:#dedbd1;
+  --accent:#17803d; --accent-ink:#ffffff; --accent-soft:#e3f1e8; --warn:#9a5b06; --warn-soft:#fbefd9;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#121512; --surface:#1a1f1b; --surface2:#222923; --ink:#e8eee9; --muted:#9fada4; --line:#2e372f;
+    --accent:#47b873; --accent-ink:#08150d; --accent-soft:#16301f; --warn:#f0b25c; --warn-soft:#3a2a12;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+code{background:var(--surface2);border-radius:4px;padding:1px 6px;font:13px ui-monospace,SFMono-Regular,Menlo,monospace}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;max-width:1180px;margin:0 auto;padding:24px 20px 80px}
+nav.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:2px}
+nav.toc h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+nav.toc a{display:flex;justify-content:space-between;gap:8px;text-decoration:none;color:var(--ink);padding:7px 10px;border-radius:8px;font-size:14px}
+nav.toc a:hover{background:var(--surface2)}
+nav.toc a small{color:var(--muted)}
+main{min-width:0}
+header.top h1{font-size:30px;line-height:1.2;letter-spacing:-.02em}
+header.top p{color:var(--muted);margin-top:6px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px;align-items:center}
+.tools input[type=search]{flex:1 1 240px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--surface2)}
+.progress{font-size:14px;color:var(--muted)}
+.bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+section{margin-top:40px}
+section>h2{font-size:22px;letter-spacing:-.01em;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.intro{color:var(--muted);margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.cards{display:grid;gap:12px}
+.beats{margin:0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:b}
+.beats li{counter-increment:b;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.beats li::before{content:counter(b);width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:13px}
+.beats b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--accent-soft);color:var(--accent);margin-bottom:8px}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.note{background:var(--warn-soft);color:var(--ink);border-left:4px solid var(--warn);border-radius:0;padding:12px 14px}
+.note b{color:var(--warn)}
+ul.pts{margin:0;padding-left:20px;display:grid;gap:5px}
+details.qa{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+details.qa[open]{border-color:var(--accent)}
+details.qa summary{cursor:pointer;list-style:none;padding:13px 16px;font-weight:600;display:flex;gap:10px;align-items:flex-start}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{content:"+";flex:none;width:22px;height:22px;border-radius:6px;background:var(--surface2);display:grid;place-items:center;font-weight:700;color:var(--muted);margin-top:1px}
+details.qa[open] summary::before{content:"–";background:var(--accent);color:var(--accent-ink)}
+details.qa.done summary .q{color:var(--muted)}
+details.qa.done summary .q::after{content:" · practiced";font-weight:400;font-size:13px;color:var(--accent)}
+.a{padding:0 16px 14px 48px}
+.practice{display:inline-flex;gap:8px;align-items:center;margin-top:10px;font-size:14px;color:var(--muted);cursor:pointer}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}
+.scroll svg{display:block;width:100%;min-width:620px;height:auto}
+.caption{color:var(--muted);font-size:14px;margin:8px 2px 0}
+.hidden{display:none!important}
+svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+svg .t{font-size:14px;fill:var(--ink)} svg .ts{font-size:12px;fill:var(--muted)} svg .th{font-size:14px;font-weight:500;fill:var(--ink)}
+svg .arr{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .mk{stroke:var(--muted);fill:none}
+.c-purple>rect,rect.c-purple{fill:#EEEDFE;stroke:#534AB7;stroke-width:.5}
+.c-purple>.th{fill:#3C3489}.c-purple>.ts{fill:#534AB7}
+.c-teal>rect,rect.c-teal{fill:#E1F5EE;stroke:#0F6E56;stroke-width:.5}
+.c-teal>.th{fill:#085041}.c-teal>.ts{fill:#0F6E56}
+.c-gray>rect,rect.c-gray{fill:#F1EFE8;stroke:#5F5E5A;stroke-width:.5}
+.c-gray>.th{fill:#444441}.c-gray>.ts{fill:#5F5E5A}
+@media (prefers-color-scheme:dark){
+  .c-purple>rect,rect.c-purple{fill:#3C3489;stroke:#AFA9EC} .c-purple>.th{fill:#CECBF6} .c-purple>.ts{fill:#AFA9EC}
+  .c-teal>rect,rect.c-teal{fill:#085041;stroke:#5DCAA5} .c-teal>.th{fill:#9FE1CB} .c-teal>.ts{fill:#5DCAA5}
+  .c-gray>rect,rect.c-gray{fill:#444441;stroke:#B4B2A9} .c-gray>.th{fill:#D3D1C7} .c-gray>.ts{fill:#B4B2A9}
+}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.seg button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+table.nums{width:100%;min-width:520px;border-collapse:collapse;font-size:15px}
+.nums th,.nums td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.nums th{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface2)}
+.nums tr:last-child td{border-bottom:0}
+.nums td:first-child{font-weight:600}
+.nums input{width:100%;min-width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.gap{margin-bottom:14px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+.flow span{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;background:var(--surface2)}
+.flow span.eks{background:#EEEDFE;border-color:#534AB7;color:#3C3489}
+.flow span.aws{background:#E1F5EE;border-color:#0F6E56;color:#085041}
+.flow span.hum{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.flow i{font-style:normal;color:var(--muted)}
+.beats em{font-style:normal;font-size:12px;font-weight:600;color:var(--accent);margin-left:6px}
+@media (prefers-color-scheme:dark){
+  .flow span.eks{background:#3C3489;border-color:#AFA9EC;color:#CECBF6}
+  .flow span.aws{background:#085041;border-color:#5DCAA5;color:#9FE1CB}
+}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;padding:16px 14px 70px}
+  nav.toc{position:static;max-height:none;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:6px}
+  nav.toc h2{display:none}
+  nav.toc a{white-space:nowrap;border:1px solid var(--line);background:var(--surface)}
+  header.top h1{font-size:25px}
+  .a{padding-left:16px}
+}
+@media print{
+  nav.toc,.tools,.practice{display:none!important}
+  .layout{display:block;padding:0}
+  details.qa{break-inside:avoid}
+  body{background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="mk" d="M2 1L8 5L2 9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs></svg>
+
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="Sections"><h2>Sections</h2></nav>
+  <main>
+    <header class="top">
+      <h1>Interview prep: Audit Process Automation and IDP</h1>
+      <p>For Sivashankar S, Lead Engineer, Spartan Technologies. Tell-me-about-yourself, flowcharts, resume risk flags and model answers. Adapt every answer to what you actually built.</p>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search questions and answers" aria-label="Search questions and answers">
+        <button class="btn" id="expand">Expand all</button>
+        <button class="btn" id="collapse">Collapse all</button>
+      </div>
+      <div class="progress" id="progress" aria-live="polite"></div>
+      <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+    </header>
+
+    <section id="tmay">
+      <h2>Tell me about yourself</h2>
+      <p class="intro">Say it in your own words, about 30 seconds. Don’t memorise word for word.</p>
+      <div class="cards">
+        <div class="card">
+          <span class="tag">30-second version</span>
+          <p>I’m Sivashankar, a lead engineer with 8+ years building backend and AI systems in Python and Go. I started in industrial automation, moved into document-processing and SaaS platforms on AWS, and now lead an eight-engineer team at Spartan Technologies on an agentic document-processing platform and an audit-automation platform. I’m strongest at turning messy workflows into reliable, event-driven systems with humans in the loop.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="walk">
+      <h2>Audit Process Automation: project walkthrough</h2>
+      <p class="intro">Short intro first, then the flow step by step. Draw the pipeline strip on the whiteboard, then walk the steps in order. Adjust every detail to what you actually built.</p>
+      <div class="cards">
+        <div class="card">
+          <span class="tag">Short intro (30 seconds)</span>
+          <p>Audit Process Automation is a platform that helps an audit and compliance team deal with notices from authority portals. It pulls notices in, reads them with OCR, and uses AI agents to summarise each notice and draft the reply. People review and approve every reply, and only then does the system submit it back to the portal. I lead the team that built it. The frontend and backend run on EKS, the async work runs on Lambda, SQS and EventBridge, and the agents run on Amazon Bedrock AgentCore.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Architecture at a glance</span>
+          <p class="flow"><span class="aws">Schedule 1: fetch notices, all clients</span><i>→</i><span class="aws">PDFs in S3 · Fetched</span><i>→</i><span class="aws">Schedule 2: OCR extraction</span><i>→</i><span class="aws">Fields in Aurora · Extracted</span><i>→</i><span class="aws">Schedule 3: AI analysis</span><i>→</i><span class="eks">Draft in UI · Draft ready</span><i>→</i><span class="hum">Reviewer / approver</span><i>→</i><span class="aws">Lambda submit</span><i>→</i><span class="aws">Portal</span></p>
+          <p class="caption">Purple runs on EKS, green is serverless or managed AWS, amber is a human step. Each schedule runs as a batch over every client and moves notices to the next status in Aurora. S3 holds the PDFs, and an append-only audit log records every step. Flowcharts 1 to 4 below draw each part.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Step by step</span>
+          <ol class="beats">
+            <li><div><b>Fetch the notices<em>EventBridge schedule 1</em></b>A scheduled EventBridge run fetches new notices for all clients from the portals and downloads each notice PDF into S3. Every notice gets a row in Aurora with status Fetched. Each portal has its own queue, so one slow portal never blocks the others.</div></li>
+            <li><div><b>Extract the files<em>EventBridge schedule 2, SQS, Lambda OCR</em></b>The next schedule queues one message per notice in status Fetched, carrying the notice ID and S3 key. A Lambda worker downloads the PDF from S3 and runs OCR on it: notice type, section, due date, amount. Digital PDFs give text directly, scans go through OCR. Long PDFs are split by page range to stay under the 15-minute limit. The text and fields go to Aurora, linked to the original PDF, and the status moves to Extracted.</div></li>
+            <li><div><b>Track the status<em>Backend API on EKS, Aurora</em></b>The backend owns the notice status through a state machine, so each stage only picks up notices in the right status and a failed notice stays visible instead of being lost. It also serves the KPIs, caches in Redis, and pushes live status to the UI over WebSocket.</div></li>
+            <li><div><b>AI analysis<em>EventBridge schedule 3, SQS, Lambda, AgentCore</em></b>The third schedule picks up every notice in status Extracted and queues one job per notice on SQS. A Lambda worker invokes AgentCore Runtime with a session ID. The worker supplies the tenant ID and notice ID, never the model. Slow LLM calls stay off the API pods.</div></li>
+            <li><div><b>Draft the reply<em>Supervisor + 3 agents</em></b>A supervisor routes to the Summariser, then the Reply agent, then the Critic. The Critic runs deterministic checks first (section numbers, dates, amounts) and can send the draft back for revision, capped at 2 or 3 loops, then it escalates to a human. Agents use read-only MCP tools through AgentCore Gateway. They propose, they never act. The draft is saved and the status moves to Draft ready.</div></li>
+            <li><div><b>Human approval<em>EKS backend</em></b>The preparer edits the draft and sends it to a reviewer, who approves or asks for changes. A high-risk or low-confidence notice also goes to an approver. Each decision updates the status. Roles are enforced on the server, and preparer, reviewer and approver must be different people.</div></li>
+            <li><div><b>Submit<em>Lambda, API → web → RPA</em></b>A Lambda worker submits only when the status reads approved. It tries the portal API first, then web automation, then OCR-based RPA, and falls back only on technical failures. An idempotency key and the portal's acknowledgement number prevent double submission.</div></li>
+            <li><div><b>Prove it<em>Audit trail and monitoring</em></b>Every step is written to an append-only audit trail: who did what, the draft version, and the model and prompt version. A DLQ with alarms, plus AgentCore Observability traces, show failures. One query by notice ID rebuilds the whole story.</div></li>
+          </ol>
+        </div>
+        <div class="card">
+          <span class="tag">Three design points to land</span>
+          <ul class="pts">
+            <li><b>Humans gate the flow, not the AI.</b> Submission is irreversible, so nothing is filed without approval.</li>
+            <li><b>Right runtime for each job.</b> EKS for always-on APIs, serverless for bursty and scheduled work, AgentCore for isolated agent sessions.</li>
+            <li><b>Reliability over scale.</b> The load is low and spiky, so the queues, idempotency, retries and audit trail are there for correctness, not throughput.</li>
+          </ul>
+        </div>
+        <div class="card note">
+          <b>Make it yours before the interview</b>
+          <ul class="pts" style="margin-top:6px">
+            <li>Say which two or three pieces you personally built and can explain line by line.</li>
+            <li>Check each step against your real system: which portals, which queues, which agent framework.</li>
+            <li>Have one real number ready (notices a day, time to prepare a reply) and say whether it is production, pilot or a design figure.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="diagrams">
+      <h2>Flowcharts</h2>
+      <p class="intro">Draw these from memory on a whiteboard. Purple runs on EKS, teal is serverless or managed AWS, gray is data or a policy decision.</p>
+
+      <h3 style="margin:6px 0 8px;font-size:16px">1. Overall architecture</h3>
+      <div class="scroll">
+<svg viewBox="0 0 680 590" role="img"><title>Audit automation architecture</title><desc>EventBridge runs three schedules over all clients. Schedule 1 has a Lambda worker fetch notice PDFs from the authority portals into S3. Schedule 2 queues the fetched notices and a Lambda worker runs OCR extraction on the PDFs. Schedule 3 queues one job per notice on SQS, a Lambda worker invokes Bedrock AgentCore agents that use read-only tools. Every stage updates the notice status in Aurora. Users review and approve through the frontend and backend on EKS, and a Lambda worker submits to the portal after approval.</desc>
+<g class="c-teal"><rect x="40" y="12" width="600" height="70" rx="12" style="fill:none;stroke-dasharray:5 4"/><text class="ts" x="52" y="25" dominant-baseline="central">EventBridge: three schedules, each runs over all clients</text></g>
+<g class="c-teal"><rect x="45" y="38" width="180" height="38" rx="8"/><text class="th" x="135" y="52" text-anchor="middle" dominant-baseline="central">1 Fetch notices</text><text class="ts" x="135" y="67" text-anchor="middle" dominant-baseline="central">Download notice PDFs</text></g>
+<g class="c-teal"><rect x="250" y="38" width="180" height="38" rx="8"/><text class="th" x="340" y="52" text-anchor="middle" dominant-baseline="central">2 OCR extraction</text><text class="ts" x="340" y="67" text-anchor="middle" dominant-baseline="central">Fetched notices only</text></g>
+<g class="c-teal"><rect x="455" y="38" width="180" height="38" rx="8"/><text class="th" x="545" y="52" text-anchor="middle" dominant-baseline="central">3 AI analysis</text><text class="ts" x="545" y="67" text-anchor="middle" dominant-baseline="central">Extracted notices only</text></g>
+<line x1="135" y1="82" x2="135" y2="120" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="82" x2="340" y2="120" class="arr" marker-end="url(#arrow)"/>
+<line x1="545" y1="82" x2="545" y2="120" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="40" y="120" width="190" height="56" rx="8"/><text class="th" x="135" y="138" text-anchor="middle" dominant-baseline="central">Lambda workers</text><text class="ts" x="135" y="158" text-anchor="middle" dominant-baseline="central">Fetch notices, submit replies</text></g>
+<g class="c-teal"><rect x="245" y="120" width="190" height="56" rx="8"/><text class="th" x="340" y="138" text-anchor="middle" dominant-baseline="central">SQS and Lambda OCR</text><text class="ts" x="340" y="158" text-anchor="middle" dominant-baseline="central">Reads PDFs, writes fields</text></g>
+<g class="c-teal"><rect x="450" y="120" width="190" height="56" rx="8"/><text class="th" x="545" y="138" text-anchor="middle" dominant-baseline="central">SQS and Lambda worker</text><text class="ts" x="545" y="158" text-anchor="middle" dominant-baseline="central">One job per notice</text></g>
+<line x1="135" y1="176" x2="135" y2="210" class="arr" marker-end="url(#arrow)"/>
+<g class="c-gray"><rect x="40" y="210" width="190" height="56" rx="8"/><text class="th" x="135" y="228" text-anchor="middle" dominant-baseline="central">S3</text><text class="ts" x="135" y="248" text-anchor="middle" dominant-baseline="central">Notice PDFs</text></g>
+<path d="M 230 238 L 300 238 L 300 176" class="arr" marker-end="url(#arrow)"/>
+<line x1="545" y1="176" x2="545" y2="210" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="450" y="210" width="190" height="56" rx="8"/><text class="th" x="545" y="228" text-anchor="middle" dominant-baseline="central">Bedrock AgentCore</text><text class="ts" x="545" y="248" text-anchor="middle" dominant-baseline="central">Supervisor + 3 agents</text></g>
+<line x1="545" y1="266" x2="545" y2="300" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="450" y="300" width="190" height="56" rx="8"/><text class="th" x="545" y="318" text-anchor="middle" dominant-baseline="central">Gateway and tools</text><text class="ts" x="545" y="338" text-anchor="middle" dominant-baseline="central">MCP tools, read-only</text></g>
+<line x1="545" y1="356" x2="545" y2="390" class="arr" marker-end="url(#arrow)"/>
+<line x1="135" y1="266" x2="135" y2="390" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="176" x2="340" y2="390" class="arr" marker-end="url(#arrow)"/>
+<path d="M 640 148 L 662 148 L 662 415 L 640 415" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="146" y="330" dominant-baseline="central">Fetched</text><text class="ts" x="352" y="330" dominant-baseline="central">Extracted</text><text class="ts" x="656" y="280" text-anchor="end" dominant-baseline="central">Draft ready</text>
+<g class="c-gray"><rect x="40" y="390" width="600" height="56" rx="8"/><text class="th" x="340" y="408" text-anchor="middle" dominant-baseline="central">Aurora: notice status, results, audit log</text><text class="ts" x="340" y="428" text-anchor="middle" dominant-baseline="central">Fetched → Extracted → Draft ready → Approved → Submitted</text></g>
+<g class="c-gray"><rect x="40" y="490" width="150" height="56" rx="8"/><text class="th" x="115" y="508" text-anchor="middle" dominant-baseline="central">Authority portals</text><text class="ts" x="115" y="528" text-anchor="middle" dominant-baseline="central">Source and filing</text></g>
+<path d="M 40 148 L 18 148 L 18 518 L 40 518" class="arr" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<g class="c-gray"><rect x="215" y="490" width="120" height="56" rx="8"/><text class="th" x="275" y="508" text-anchor="middle" dominant-baseline="central">Users</text><text class="ts" x="275" y="528" text-anchor="middle" dominant-baseline="central">Preparer, reviewer</text></g>
+<g class="c-purple"><rect x="355" y="490" width="120" height="56" rx="8"/><text class="th" x="415" y="508" text-anchor="middle" dominant-baseline="central">Frontend</text><text class="ts" x="415" y="528" text-anchor="middle" dominant-baseline="central">SPA behind ALB</text></g>
+<g class="c-purple"><rect x="495" y="490" width="145" height="56" rx="8"/><text class="th" x="567.5" y="508" text-anchor="middle" dominant-baseline="central">Backend API</text><text class="ts" x="567.5" y="528" text-anchor="middle" dominant-baseline="central">State machine, KPIs</text></g>
+<line x1="335" y1="518" x2="355" y2="518" class="arr" marker-end="url(#arrow)"/>
+<line x1="475" y1="518" x2="495" y2="518" class="arr" marker-end="url(#arrow)"/>
+<line x1="567" y1="490" x2="567" y2="446" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="578" y="468" dominant-baseline="central">Review, approve</text>
+<rect x="40" y="566" width="12" height="12" rx="2" class="c-purple"/><text class="ts" x="58" y="572" dominant-baseline="central">Runs on EKS</text><rect x="190" y="566" width="12" height="12" rx="2" class="c-teal"/><text class="ts" x="208" y="572" dominant-baseline="central">Serverless or managed AWS</text><rect x="420" y="566" width="12" height="12" rx="2" class="c-gray"/><text class="ts" x="438" y="572" dominant-baseline="central">Data, users, portals</text>
+</svg>
+      </div>
+      <ul class="pts caption" style="padding-left:20px;margin-top:10px">
+        <li>EventBridge runs three schedules over all clients: fetch notices, then OCR extraction, then AI analysis. Each stage moves the notice to the next status in the database.</li>
+        <li>The Backend API on EKS owns workflow state and the approval state machine.</li>
+        <li>Lambda writes results and attempts, not status transitions.</li>
+      </ul>
+
+      <h3 style="margin:26px 0 8px;font-size:16px">2. AI analysis and drafting</h3>
+      <div class="scroll">
+<svg viewBox="0 0 680 610" role="img"><title>AI analysis and drafting flow</title><desc>A scheduled EventBridge run starts analysis. The backend on EKS queues a job per extracted notice, a Lambda worker invokes AgentCore Runtime, where the supervisor agent routes to the summariser, reply and critic agents. If the critic fails the draft it goes back to the reply agent, otherwise the draft is saved and the user is notified.</desc>
+<g class="c-purple"><rect x="220" y="30" width="240" height="44" rx="8"/><text class="th" x="340" y="52" text-anchor="middle" dominant-baseline="central">Schedule 3: AI analysis</text></g>
+<line x1="340" y1="74" x2="340" y2="104" class="arr" marker-end="url(#arrow)"/>
+<g class="c-purple"><rect x="220" y="104" width="240" height="56" rx="8"/><text class="th" x="340" y="122" text-anchor="middle" dominant-baseline="central">Backend API (EKS)</text><text class="ts" x="340" y="142" text-anchor="middle" dominant-baseline="central">Notices in Extracted, one job each</text></g>
+<line x1="340" y1="160" x2="340" y2="190" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="220" y="190" width="240" height="56" rx="8"/><text class="th" x="340" y="208" text-anchor="middle" dominant-baseline="central">SQS and Lambda worker</text><text class="ts" x="340" y="228" text-anchor="middle" dominant-baseline="central">Invokes AgentCore Runtime</text></g>
+<line x1="340" y1="246" x2="340" y2="276" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="220" y="276" width="240" height="56" rx="8"/><text class="th" x="340" y="294" text-anchor="middle" dominant-baseline="central">Supervisor agent</text><text class="ts" x="340" y="314" text-anchor="middle" dominant-baseline="central">Routes in a session microVM</text></g>
+<path d="M 300 332 L 300 356 L 125 356 L 125 380" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="332" x2="340" y2="380" class="arr" marker-end="url(#arrow)"/>
+<path d="M 380 332 L 380 356 L 555 356 L 555 380" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="40" y="380" width="170" height="56" rx="8"/><text class="th" x="125" y="398" text-anchor="middle" dominant-baseline="central">Summariser agent</text><text class="ts" x="125" y="418" text-anchor="middle" dominant-baseline="central">Step 1: reads notice</text></g>
+<g class="c-teal"><rect x="255" y="380" width="170" height="56" rx="8"/><text class="th" x="340" y="398" text-anchor="middle" dominant-baseline="central">Reply agent</text><text class="ts" x="340" y="418" text-anchor="middle" dominant-baseline="central">Step 2: drafts reply</text></g>
+<g class="c-teal"><rect x="470" y="380" width="170" height="56" rx="8"/><text class="th" x="555" y="398" text-anchor="middle" dominant-baseline="central">Critic agent</text><text class="ts" x="555" y="418" text-anchor="middle" dominant-baseline="central">Step 3: checks draft</text></g>
+<path d="M 510 436 L 510 458 L 340 458 L 340 436" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="425" y="478" text-anchor="middle" dominant-baseline="central">Fails: revise</text>
+<line x1="600" y1="436" x2="600" y2="500" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="470" y="500" width="170" height="56" rx="8"/><text class="th" x="555" y="518" text-anchor="middle" dominant-baseline="central">Draft saved</text><text class="ts" x="555" y="538" text-anchor="middle" dominant-baseline="central">Saved, push sent to user</text></g>
+<rect x="40" y="584" width="12" height="12" rx="2" class="c-purple"/><text class="ts" x="58" y="590" dominant-baseline="central">Runs on EKS</text>
+<rect x="190" y="584" width="12" height="12" rx="2" class="c-teal"/><text class="ts" x="208" y="590" dominant-baseline="central">Serverless or managed AWS</text>
+</svg>
+      </div>
+      <ul class="pts caption" style="padding-left:20px;margin-top:10px">
+        <li>EKS only queues the job. Slow LLM calls never block API pods.</li>
+        <li>Cap the Critic loop at 2 to 3 revisions, then escalate to a human.</li>
+      </ul>
+
+      <h3 style="margin:26px 0 8px;font-size:16px">3. Human approval and submission</h3>
+      <div class="scroll">
+<svg viewBox="0 0 680 590" role="img"><title>Human approval and submission flow</title><desc>The preparer sends the draft to a reviewer. Changes go back to the preparer. If the notice is high risk or low confidence an approver also decides. After approval a Lambda worker submits through API automation, then web automation, then OCR-based RPA as fallbacks.</desc>
+<g class="c-purple"><rect x="220" y="30" width="240" height="44" rx="8"/><text class="th" x="340" y="52" text-anchor="middle" dominant-baseline="central">Preparer sends for review</text></g>
+<line x1="340" y1="74" x2="340" y2="104" class="arr" marker-end="url(#arrow)"/>
+<g class="c-purple"><rect x="220" y="104" width="240" height="56" rx="8"/><text class="th" x="340" y="122" text-anchor="middle" dominant-baseline="central">Reviewer decides</text><text class="ts" x="340" y="142" text-anchor="middle" dominant-baseline="central">Approve or request changes</text></g>
+<path d="M 220 132 L 150 132 L 150 52 L 220 52" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="140" y="88" text-anchor="end" dominant-baseline="central">Changes</text>
+<text class="ts" x="140" y="106" text-anchor="end" dominant-baseline="central">requested</text>
+<line x1="340" y1="160" x2="340" y2="190" class="arr" marker-end="url(#arrow)"/>
+<g class="c-gray"><rect x="190" y="190" width="300" height="56" rx="8"/><text class="th" x="340" y="208" text-anchor="middle" dominant-baseline="central">Needs approver?</text><text class="ts" x="340" y="228" text-anchor="middle" dominant-baseline="central">High risk or confidence under 80%</text></g>
+<line x1="340" y1="246" x2="340" y2="288" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="352" y="268" text-anchor="start" dominant-baseline="central">Yes</text>
+<g class="c-purple"><rect x="220" y="288" width="240" height="56" rx="8"/><text class="th" x="340" y="306" text-anchor="middle" dominant-baseline="central">Approver decides</text><text class="ts" x="340" y="326" text-anchor="middle" dominant-baseline="central">Final sign-off</text></g>
+<path d="M 490 218 L 580 218 L 580 414 L 460 414" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="535" y="206" text-anchor="middle" dominant-baseline="central">No</text>
+<line x1="340" y1="344" x2="340" y2="386" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="220" y="386" width="240" height="56" rx="8"/><text class="th" x="340" y="404" text-anchor="middle" dominant-baseline="central">Lambda submits</text><text class="ts" x="340" y="424" text-anchor="middle" dominant-baseline="central">Only after all approvals</text></g>
+<path d="M 300 442 L 300 460 L 125 460 L 125 478" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="40" y="478" width="170" height="56" rx="8"/><text class="th" x="125" y="496" text-anchor="middle" dominant-baseline="central">API automation</text><text class="ts" x="125" y="516" text-anchor="middle" dominant-baseline="central">First choice</text></g>
+<g class="c-teal"><rect x="255" y="478" width="170" height="56" rx="8"/><text class="th" x="340" y="496" text-anchor="middle" dominant-baseline="central">Web automation</text><text class="ts" x="340" y="516" text-anchor="middle" dominant-baseline="central">If API fails</text></g>
+<g class="c-teal"><rect x="470" y="478" width="170" height="56" rx="8"/><text class="th" x="555" y="496" text-anchor="middle" dominant-baseline="central">OCR-based RPA</text><text class="ts" x="555" y="516" text-anchor="middle" dominant-baseline="central">If web fails</text></g>
+<line x1="210" y1="506" x2="255" y2="506" class="arr" marker-end="url(#arrow)"/>
+<line x1="425" y1="506" x2="470" y2="506" class="arr" marker-end="url(#arrow)"/>
+<rect x="40" y="562" width="12" height="12" rx="2" class="c-purple"/><text class="ts" x="58" y="568" dominant-baseline="central">Runs on EKS</text>
+<rect x="190" y="562" width="12" height="12" rx="2" class="c-teal"/><text class="ts" x="208" y="568" dominant-baseline="central">Serverless or managed AWS</text>
+<rect x="420" y="562" width="12" height="12" rx="2" class="c-gray"/><text class="ts" x="438" y="568" dominant-baseline="central">Policy decision</text>
+</svg>
+      </div>
+      <ul class="pts caption" style="padding-left:20px;margin-top:10px">
+        <li>Humans gate the flow, not the AI. Lambda submits only when the status reads approved.</li>
+        <li>Either gate can send the notice back to the preparer.</li>
+      </ul>
+
+      <h3 style="margin:26px 0 8px;font-size:16px">4. Agent layer: runtime, MCP tools and knowledge base</h3>
+      <div class="scroll">
+<svg viewBox="0 0 680 566" role="img"><title>Agent layer on AgentCore with MCP tools</title><desc>A worker Lambda invokes AgentCore Runtime. Inside a per-session microVM, a supervisor agent routes to summarizer, reply and critic agents. They call tools through AgentCore Gateway as MCP tools. The summarizer tools read Aurora and S3, the reply tools call the rules engine on EKS and optionally a knowledge base, and the critic tools are pure validation checks.</desc>
+<g class="c-teal"><rect x="220" y="30" width="240" height="56" rx="8"/><text class="th" x="340" y="48" text-anchor="middle" dominant-baseline="central">Worker Lambda</text><text class="ts" x="340" y="68" text-anchor="middle" dominant-baseline="central">Invoke runtime, session ID</text></g>
+<line x1="340" y1="86" x2="340" y2="120" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="30" y="100" width="620" height="206" rx="16" style="fill:none;stroke-dasharray:5 4"/><text class="ts" x="630" y="110" text-anchor="end" dominant-baseline="central">AgentCore Runtime: one microVM per session</text></g>
+<g class="c-teal"><rect x="220" y="120" width="240" height="56" rx="8"/><text class="th" x="340" y="138" text-anchor="middle" dominant-baseline="central">Supervisor agent</text><text class="ts" x="340" y="158" text-anchor="middle" dominant-baseline="central">Routes to sub-agents</text></g>
+<path d="M 300 176 L 300 200 L 125 200 L 125 230" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="176" x2="340" y2="230" class="arr" marker-end="url(#arrow)"/>
+<path d="M 380 176 L 380 200 L 555 200 L 555 230" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="40" y="230" width="170" height="56" rx="8"/><text class="th" x="125" y="248" text-anchor="middle" dominant-baseline="central">Summarizer agent</text><text class="ts" x="125" y="268" text-anchor="middle" dominant-baseline="central">Reads the notice</text></g>
+<g class="c-teal"><rect x="255" y="230" width="170" height="56" rx="8"/><text class="th" x="340" y="248" text-anchor="middle" dominant-baseline="central">Reply agent</text><text class="ts" x="340" y="268" text-anchor="middle" dominant-baseline="central">Drafts the reply</text></g>
+<g class="c-teal"><rect x="470" y="230" width="170" height="56" rx="8"/><text class="th" x="555" y="248" text-anchor="middle" dominant-baseline="central">Critic agent</text><text class="ts" x="555" y="268" text-anchor="middle" dominant-baseline="central">Checks the draft</text></g>
+<line x1="125" y1="286" x2="125" y2="346" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="286" x2="340" y2="346" class="arr" marker-end="url(#arrow)"/>
+<line x1="555" y1="286" x2="555" y2="346" class="arr" marker-end="url(#arrow)"/>
+<g class="c-teal"><rect x="30" y="316" width="620" height="102" rx="16" style="fill:none;stroke-dasharray:5 4"/><text class="ts" x="150" y="330" text-anchor="start" dominant-baseline="central">AgentCore Gateway: MCP tools</text></g>
+<g class="c-teal"><rect x="40" y="346" width="170" height="56" rx="8"/><text class="th" x="125" y="364" text-anchor="middle" dominant-baseline="central">Notice tools</text><text class="ts" x="125" y="384" text-anchor="middle" dominant-baseline="central">Text and metadata</text></g>
+<g class="c-teal"><rect x="255" y="346" width="170" height="56" rx="8"/><text class="th" x="340" y="364" text-anchor="middle" dominant-baseline="central">Reply tools</text><text class="ts" x="340" y="384" text-anchor="middle" dominant-baseline="central">Rules and templates</text></g>
+<g class="c-teal"><rect x="470" y="346" width="170" height="56" rx="8"/><text class="th" x="555" y="364" text-anchor="middle" dominant-baseline="central">Critic tools</text><text class="ts" x="555" y="384" text-anchor="middle" dominant-baseline="central">Pure validation checks</text></g>
+<line x1="125" y1="402" x2="125" y2="446" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="402" x2="340" y2="446" class="arr" marker-end="url(#arrow)"/>
+<path d="M 400 402 L 400 430 L 555 430 L 555 446" class="arr" style="stroke-dasharray:5 4" marker-end="url(#arrow)"/>
+<g class="c-gray"><rect x="40" y="446" width="170" height="56" rx="8"/><text class="th" x="125" y="464" text-anchor="middle" dominant-baseline="central">Aurora and S3</text><text class="ts" x="125" y="484" text-anchor="middle" dominant-baseline="central">Read-only, per tenant</text></g>
+<g class="c-purple"><rect x="255" y="446" width="170" height="56" rx="8"/><text class="th" x="340" y="464" text-anchor="middle" dominant-baseline="central">Backend rules API</text><text class="ts" x="340" y="484" text-anchor="middle" dominant-baseline="central">Rules engine on EKS</text></g>
+<g class="c-gray"><rect x="470" y="446" width="170" height="56" rx="8" style="stroke-dasharray:5 4"/><text class="th" x="555" y="464" text-anchor="middle" dominant-baseline="central">Knowledge base</text><text class="ts" x="555" y="484" text-anchor="middle" dominant-baseline="central">Optional, phase 2</text></g>
+<rect x="40" y="532" width="12" height="12" rx="2" class="c-purple"/><text class="ts" x="58" y="538" dominant-baseline="central">Runs on EKS</text>
+<rect x="190" y="532" width="12" height="12" rx="2" class="c-teal"/><text class="ts" x="208" y="538" dominant-baseline="central">Serverless or managed AWS</text>
+<rect x="420" y="532" width="12" height="12" rx="2" class="c-gray"/><text class="ts" x="438" y="538" dominant-baseline="central">Data. Dashed means optional</text>
+</svg>
+      </div>
+      <ul class="pts caption" style="padding-left:20px;margin-top:10px">
+        <li>Each session runs in its own microVM, so one tenant’s session can’t see another’s.</li>
+        <li>Tools are MCP tools exposed through AgentCore Gateway. Agents propose, they never act: tools are read-only or validating.</li>
+        <li>Status changes, approvals and portal submission stay in the EKS backend and the worker Lambdas.</li>
+        <li>The notice text goes straight into the agent’s context. A knowledge base is optional and only for shared reference material.</li>
+      </ul>
+    </section>
+
+    <section id="numbers">
+      <h2>Production numbers and load</h2>
+      <p class="intro">Pick a category. The right-hand column is yours: type your real figure and it is saved in this browser.</p>
+      <div class="card note gap"><b>Illustrative, not your actuals.</b> These are realistic ballparks for a mid-size audit or compliance firm. Replace each one with what you measured. If you didn’t measure it, call it a “pilot result” or a “design target”.</div>
+      <div class="seg" role="tablist" id="numtabs" aria-label="Number categories"></div>
+      <div class="scroll" id="numpanel"></div>
+      <div class="card" style="margin-top:14px">
+        <span class="tag">What the load means for your answers</span>
+        <ul class="pts">
+          <li>The load is low. This is a reliability problem, not a scale problem. Any laptop could handle the volume.</li>
+          <li>Don’t claim “high scale” or “millions of requests”.</li>
+          <li>Queues exist for retries, isolation and backpressure on slow LLM and portal calls, not for throughput.</li>
+          <li>The hard parts are correctness, idempotency, audit trails and human approval.</li>
+          <li>Pick one consistent set of numbers and rehearse it. Each figure needs a story: how you measured it and what you changed because of it.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="audit">
+      <h2>Audit and governance list</h2>
+      <p class="intro">Everything to record for an AI-drafted, human-approved reply. Pick a group.</p>
+      <div class="card note gap"><b>Verify before you claim.</b> What exists in your account depends on what you enabled. Guardrails are not applied automatically to agent code, and newer AgentCore features such as Evaluations and Policy may differ by region and release. Say only what you actually have.</div>
+      <div class="seg" role="tablist" id="audittabs" aria-label="Audit groups"></div>
+      <div class="scroll" id="auditpanel"></div>
+    </section>
+
+    <div id="qa"></div>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const SECTIONS = [
+{ id: 'flags', title: 'Resume risk flags', intro: 'Interviewers read the resume against what you say. These are the gaps they will probe first.', items: [
+  { q: "Your resume says serverless (Lambda, SQS, EventBridge), but the frontend and backend run on EKS. Which is it?", a: [
+    "Both, and say so clearly: the user-facing and stateful services run on EKS; the async and scheduled work runs serverless.",
+    "Suggested wording: “EKS for frontend and backend; Lambda, SQS and EventBridge for workers and scheduling; agents on Amazon Bedrock AgentCore.”",
+    "Update the resume line so it matches. A mismatch looks careless."] },
+  { q: "Your resume says the agents are “built on Amazon Bedrock Agents” with “multi-agent collaboration”, but you run them on AgentCore. Which is it?", a: [
+    "Decision: AgentCore. The supervisor and sub-agents are your own agent code hosted on AgentCore Runtime, with tools exposed through AgentCore Gateway.",
+    "“Multi-agent collaboration” is a specific Bedrock Agents feature. If an interviewer hears it, they will ask about it. Reword the bullet so it matches.",
+    "Suggested wording: “Orchestrated a supervisor-led multi-agent workflow (Notice-Summarizing, Reply, Critic) hosted on Amazon Bedrock AgentCore Runtime, with tools exposed via AgentCore Gateway (MCP).”",
+    "Keep the AgentCore Observability bullet and the AgentCore skills entry. Say which agent framework you used. Your resume lists LangGraph."] },
+  { q: "The IDP platform is “cloud-agnostic” but uses EventBridge and Lambda. How?", a: [
+    "The core is portable: Kafka, the microservices, the LLM adapter (LiteLLM) and the storage abstraction (S3, Azure Blob, MinIO).",
+    "The S3 → EventBridge → Lambda OCR trigger is one AWS-specific deployment adapter.",
+    "Be explicit about which parts are portable and which are not."] },
+  { q: "Why Kafka and Celery/RabbitMQ in IDP, but SQS in Audit?", a: [
+    "Kafka: ordered event log and control bus across 16+ services, with replay and multiple consumers.",
+    "Celery + RabbitMQ: background tasks with scheduling (Beat) in the Python services.",
+    "SQS: managed queue for the serverless audit platform, with no brokers to run.",
+    "Be honest that different needs and ecosystems drove this, and say what you would unify if you could."] },
+  { q: "You joined Spartan in June 2026 and your resume shows nothing from November 2025 to June 2026. Why?", a: [
+    "Answer briefly, honestly and positively. Don’t over-explain and don’t criticise past employers.",
+    "Prepare one true sentence for the gap and one for why you are exploring now.",
+    "Then redirect to what you are building and what you want next."] },
+  { q: "There are no numbers on the resume. What scale are you running?", a: [
+    "Decide your real figures before the interview and say them with confidence.",
+    "Prepare: notices or jobs per day, peak concurrency, p95 latency, AI draft acceptance rate, percentage auto-approved, cost per notice, and incidents.",
+    "If you don’t know a figure, say what you measured and how, rather than guessing."] },
+  { q: "Did you write the code or only design it?", a: [
+    "As lead: you own architecture and key components, review code and unblock the team.",
+    "Name two or three pieces you personally built and can explain line by line.",
+    "Don’t claim every service. They will test depth."] }
+]},
+
+{ id: 'a', title: 'A. Architecture split', intro: 'The “why this design” questions. Expect these first.', items: [
+  { q: "Why frontend and backend on EKS but workers on Lambda?", a: [
+    "EKS suits always-on, low-latency APIs, WebSockets and services shared with the rest of the platform.",
+    "Lambda suits bursty, event-driven and scheduled work: pay per use, scale to zero.",
+    "Not all-Lambda: cold starts, 15-minute limit, awkward for long-lived connections.",
+    "Not all-EKS: idle cost, and you would own queue-consumer scaling.",
+    "Be honest about the trade-off: three runtimes means more operational surface."] },
+  { q: "Why AgentCore instead of running agents inside the backend pods?", a: [
+    "Managed runtime: each session runs in its own microVM, which gives strong isolation between tenants and sessions.",
+    "Built-in observability, identity and a tool layer (Gateway), so you don’t build and operate them yourself.",
+    "Slow LLM calls run outside EKS, so they never tie up API pods.",
+    "You still write the agent code, so you keep control of the orchestration. Admit it is a newer service with its own limits and pricing."] },
+  { q: "Why SQS between the backend and Lambda?", a: [
+    "It absorbs spikes and gives backpressure.",
+    "Retries and a DLQ come built in.",
+    "Backend and workers scale and fail independently.",
+    "Direct invocation gives less visibility and control."] },
+  { q: "How do you handle long agent runs against Lambda’s timeout?", a: [
+    "Lambda starts the run and finishes. Completion returns through a result queue or an event.",
+    "Or split the work into steps, or use Step Functions for long chains.",
+    "If SQS-triggered, set the visibility timeout to at least 6x the function timeout."] }
+]},
+
+{ id: 'b', title: 'B. EKS frontend and backend', intro: 'Expect depth here because you own this layer.', items: [
+  { q: "How do users reach the app?", a: [
+    "Route 53, then CloudFront/WAF, then ALB (created by the AWS Load Balancer Controller), then Service, then pods. TLS from ACM.",
+    "Be ready for “why is the frontend on EKS and not S3 + CloudFront?” Answer honestly: simpler with the existing platform, but S3 + CloudFront is cheaper. Say what you chose and why."] },
+  { q: "How do you show real-time status?", a: [
+    "WebSocket or SSE from the backend, plus Firebase push for background events.",
+    "With multiple pods, use Redis pub/sub to fan events out to the right pod."] },
+  { q: "How do pods authenticate to AWS?", a: [
+    "IRSA or EKS Pod Identity: a service account maps to an IAM role.",
+    "Least privilege per service, and no static keys."] },
+  { q: "How do you scale and deploy without downtime?", a: [
+    "HPA on CPU or request rate. Rolling updates with readiness probes. PodDisruptionBudgets.",
+    "Graceful shutdown: handle SIGTERM and drain in-flight requests."] },
+  { q: "What does Redis cache and how do you invalidate it?", a: [
+    "Cache KPI aggregates, rule templates and sessions.",
+    "Invalidate on write events, with a TTL as a safety net.",
+    "Never trust the cache for approval state. Read it from the database."] },
+  { q: "How does the pipeline run, and how are statuses tracked?", a: [
+    "Three EventBridge schedules run as batches over all clients: (1) fetch new notices from the portals into S3, (2) OCR extraction of every fetched notice, (3) AI analysis of every extracted notice.",
+    "Each stage picks up only notices in the previous status (for example Fetched, Extracted) and writes the next one (for example Extracted, Draft ready), so a stage never reprocesses finished work.",
+    "A failure leaves the notice in its old status or marks it failed, with the attempt logged, so it is visible and can be retried.",
+    "Humans then move it on: review, approval, submission. Exact status names are yours to confirm."] },
+  { q: "Who owns notice state, and how do you avoid two writers?", a: [
+    "Only the backend changes workflow state, through the state machine.",
+    "Lambda writes results and attempts, not status transitions.",
+    "Use a version column (optimistic locking) so conflicting updates fail instead of overwriting."] }
+]},
+
+{ id: 'c', title: 'C. Lambda workers and SQS', intro: 'Reliability questions. Idempotency is the theme.', items: [
+  { q: "Why is OCR on Lambda and not on EKS?", a: [
+    "Each notice is an independent job, so a queue message per notice with a Lambda OCR worker scales out in parallel after a big fetch and costs nothing when idle. It is the same pattern as the AI stage.",
+    "The worker gets only the notice ID and S3 key. It downloads the PDF with S3 GetObject, extracts text and fields, writes them to Aurora and sets the status to Extracted.",
+    "Limits to design for: the 15-minute timeout (split long PDFs by page range), memory up to 10 GB, and heavy OCR libraries (ship them in a container image, accept a longer cold start).",
+    "Alternatives: Amazon Textract as a managed OCR service, or EKS pods if you needed a GPU model or always-warm models at high volume. The queue design means the worker can be swapped without changing the rest."] },
+  { q: "Standard or FIFO queue?", a: [
+    "Standard if each notice job is independent and consumers are idempotent. Highest throughput.",
+    "FIFO with a message group ID per notice if order within a notice matters. Lower throughput.",
+    "Say which one you used and why."] },
+  { q: "How do you handle duplicates and poison messages?", a: [
+    "Idempotency key such as notice + step + attempt, with a conditional write in the database.",
+    "DLQ with a max receive count of 3 to 5, an alarm on DLQ depth, and a redrive after the fix.",
+    "Use partial batch responses so one bad message doesn’t retry the whole batch."] },
+  { q: "How do you set the visibility timeout for slow agent calls?", a: [
+    "At least 6x the function timeout.",
+    "For long work, extend visibility with a heartbeat."] },
+  { q: "How do you protect the database and portals from overload?", a: [
+    "Maximum concurrency on the SQS event source mapping.",
+    "Reserved concurrency on the function.",
+    "A separate queue per portal, with its own concurrency and rate limit."] },
+  { q: "How do Lambdas reach Aurora?", a: [
+    "Lambda in private subnets, with RDS Proxy to avoid connection storms.",
+    "Create connections outside the handler and keep pools small.",
+    "Use VPC endpoints for SQS and Bedrock so you avoid NAT costs."] },
+  { q: "Where does circuit-breaker state live?", a: [
+    "Lambda is stateless, so keep it in Redis or DynamoDB with a TTL, per channel (API, web, RPA).",
+    "Closed, then open after N failures, then half-open with a probe."] }
+]},
+
+{ id: 'd', title: 'D. AgentCore and agents', intro: 'Your agent layer. Be precise about what AgentCore provides and what your own code does.', items: [
+  { q: "How is your agent layer built on AgentCore?", a: [
+    "The supervisor and the three sub-agents (Notice-Summarizing, Reply, Critic) are agent code hosted on AgentCore Runtime.",
+    "Say which framework you used. Your resume lists LangGraph, so a supervisor graph in LangGraph is a natural fit. Don’t name one you didn’t use.",
+    "Tools are exposed as MCP tools through AgentCore Gateway. Traces go to AgentCore Observability.",
+    "Identity and Memory are optional. Mention them only if you really used them."] },
+  { q: "What does AgentCore Runtime give you?", a: [
+    "Serverless hosting for agent code, with no servers or clusters to run.",
+    "Each session runs in its own dedicated microVM, so one tenant’s session can’t see another’s memory or files.",
+    "It is framework and model agnostic, and supports long-running sessions. Check current limits in the docs.",
+    "You pay for active use, which suits spiky audit workloads."] },
+  { q: "Where are the tools in AgentCore?", a: [
+    "AgentCore Gateway turns Lambda functions and OpenAPI APIs into MCP tools, with authentication and tool discovery.",
+    "The agent connects to the Gateway as an MCP client and calls tools by name. Tool code stays outside the agent.",
+    "AgentCore also offers built-in sandboxed tools: Code Interpreter and Browser.",
+    "There is no tool registry inside Runtime itself. Gateway is the tool layer."] },
+  { q: "What tools does each agent have in your design?", a: [
+    "Summarizer: read the notice text and its metadata (type, section, due date, amount) from Aurora or S3.",
+    "Reply: the rules and template engine (through the backend API on EKS) and client context. Optionally a knowledge base.",
+    "Critic: pure validation tools that check citations, dates, amounts and required documents against the notice.",
+    "Supervisor: routes between the three sub-agents, which it treats as its tools.",
+    "Match this to what you actually built."] },
+  { q: "Why MCP?", a: [
+    "It is an open standard, so tools are reusable across agents and frameworks.",
+    "Tools are decoupled from agent code: you can change a tool without redeploying the agent.",
+    "The Gateway gives one place for authentication, rate limits and tool-call audit."] },
+  { q: "How does the worker Lambda call the agent?", a: [
+    "Through the AgentCore runtime invoke API (InvokeAgentRuntime), with a runtime session ID per job.",
+    "The worker, not the model, supplies the tenant ID and notice ID in the request.",
+    "Handle streaming responses, timeouts and retries. The outer retry is SQS.",
+    "Give the worker role permission to invoke only this runtime. Check the exact API names in the docs."] },
+  { q: "How do you bound the Critic loop?", a: [
+    "Put the cap in code: keep a revision counter in your graph state and stop at 2 to 3.",
+    "After the cap, escalate to a human with a “critic failed” flag.",
+    "Run deterministic checks as tools (section numbers, dates, amounts match the notice) before the LLM critic."] },
+  { q: "How do you control cost and latency?", a: [
+    "Token budget per notice, an iteration cap, a smaller model for summarising, and truncation of long inputs.",
+    "Track cost per notice as a metric."] },
+  { q: "How do you deal with hallucinated citations and measure quality?", a: [
+    "Ground answers in the notice text, and validate section references against a whitelist.",
+    "Use guardrail contextual grounding checks on the draft.",
+    "Keep a golden set of past notices with accepted replies, and run it on every prompt or model change.",
+    "A strong metric: how much humans edit the AI draft before approval."] },
+  { q: "How do you version and promote agents?", a: [
+    "Runtime versions and endpoints: each update creates a new version, and an endpoint points at a version.",
+    "Promote by moving the endpoint to the tested version. Roll back by moving it back.",
+    "Gate promotion on the golden-set evaluation. Keep prompts and tool schemas in Git.",
+    "Check current AgentCore versioning behaviour in the docs."] },
+  { q: "How do you handle model throttling?", a: [
+    "Exponential backoff with jitter, with SQS redelivery as the outer retry.",
+    "Request higher quotas, and use a fallback model or cross-region inference where available."] },
+  { q: "How do you observe and debug agents?", a: [
+    "AgentCore Observability gives OpenTelemetry traces in CloudWatch: per-step latency, tokens and tool calls.",
+    "Add your own metrics: critic score, revision count and tokens per notice.",
+    "Alert on error rate, p95 latency, token spikes, cap hits and DLQ depth."] },
+  { q: "Why doesn’t the agent submit the notice itself?", a: [
+    "Submission is irreversible and legally binding, so it needs human approval.",
+    "Agents propose and validate. Status changes, approvals and portal submission stay in the backend and worker Lambdas.",
+    "Tools are read-only or validating, which also limits the damage from a bad model output."] },
+  { q: "How does a tool know which tenant it is serving?", a: [
+    "The worker passes the tenant ID and notice ID in the request. The model never supplies them.",
+    "The Gateway authenticates the caller, and each tool Lambda enforces tenant scope on every query.",
+    "Keep tool Lambdas short and read-only, with narrow IAM permissions."] },
+  { q: "Do you need a knowledge base of documents from the notices?", a: [
+    "No, not for the notice you are processing. It is 2 to 50 pages of OCR text and fits in the agent’s context, so retrieval adds complexity without benefit.",
+    "A knowledge base helps only with shared reference material: statutory references and circulars, and approved past replies and templates.",
+    "For a simple first release, skip it. Use the rules and template engine plus a whitelist of valid section references, and add a knowledge base later when you have a clean corpus.",
+    "AgentCore Memory is not a substitute. It holds session or user context, not a legal corpus."] },
+  { q: "If you add a knowledge base later, what must you get right?", a: [
+    "Tenant isolation: one client’s past replies must never appear in another’s draft. Use per-tenant knowledge bases or enforced metadata filters, or only index anonymised, approved replies.",
+    "Cost and store: check the vector store you choose, since some options have a high minimum monthly cost. Aurora pgvector is an option because you already run Aurora. Verify current pricing.",
+    "Quality: index only approved, final replies, keep source references so citations can be traced, and refresh when the law changes.",
+    "PII: redact before indexing, and apply retention rules.",
+    "Evaluation: test with and without it on your golden set, and keep it only if drafts measurably improve."] }
+]},
+
+{ id: 'e', title: 'E. Human-in-the-loop', intro: 'Your differentiator. Know the policy cold.', items: [
+  { q: "How is RBAC enforced?", a: [
+    "Server-side, per endpoint, from role claims in the token. The UI only hides buttons."] },
+  { q: "What triggers the approver gate?", a: [
+    "High risk or low confidence, decided on the server.",
+    "Be honest: an LLM’s self-reported confidence isn’t calibrated. Use signals like critic score, OCR confidence and amount thresholds, and set thresholds with the compliance team."] },
+  { q: "How do you stop self-approval?", a: [
+    "Check user IDs on the server: preparer, reviewer and approver must be different people."] },
+  { q: "What is in the audit trail?", a: [
+    "Who, when, what changed, the draft version, and the model and prompt version.",
+    "Append-only table with no update or delete rights for the app."] }
+]},
+
+{ id: 'f', title: 'F. Automation and reliability', intro: 'The API → web → RPA cascade is unusual, so expect curiosity.', items: [
+  { q: "When do you fall back from API to web to RPA?", a: [
+    "Fall back on technical failures: timeouts, 5xx, auth or schema changes.",
+    "Don’t fall back on business rejections like validation errors. Those need a human."] },
+  { q: "How do you keep web and RPA automation stable?", a: [
+    "Page-object pattern, resilient selectors, screenshots on failure, scheduled synthetic checks.",
+    "A feature flag to disable a broken channel quickly.",
+    "Lambda needs a container image with headless Chromium, and the 15-minute limit applies."] },
+  { q: "How do you avoid double submission?", a: [
+    "Write an idempotency key and a lock before sending.",
+    "Store the portal’s acknowledgement number."] },
+  { q: "The portal accepted the submission but Lambda timed out. Now what?", a: [
+    "Mark the attempt “unknown”. On retry, check the portal for an existing acknowledgement before resubmitting.",
+    "If it can’t be verified, send it to a human."] }
+]},
+
+{ id: 'g', title: 'G. Security and operations', intro: '', items: [
+  { q: "How do you isolate tenants?", a: [
+    "Tenant ID in the token and every table, with row-level security.",
+    "Per-tenant S3 prefixes with IAM conditions, and tenant ID in every queue message."] },
+  { q: "How do you protect PII in prompts and logs?", a: [
+    "Redact before logging, use Bedrock Guardrails, and encrypt with KMS.",
+    "Reach Bedrock over private endpoints. Never log full prompts."] },
+  { q: "How do you do CI/CD?", a: [
+    "Build, push to ECR, deploy with Helm or ArgoCD to EKS.",
+    "Lambda through infrastructure as code (Terraform, CDK or SAM). Separate dev, staging and prod, with rollback."] },
+  { q: "What was your worst production incident?", a: [
+    "Use your own story. Structure: impact, how you detected it, root cause, fix, prevention."] }
+]},
+
+{ id: 'h', title: 'H. Kubernetes', intro: 'Core EKS and Kubernetes questions for a lead role.', items: [
+  { q: "Deployment vs StatefulSet vs DaemonSet?", a: [
+    "Deployment: stateless pods with rolling updates. Your API and frontend.",
+    "StatefulSet: stable identity and storage, such as databases.",
+    "DaemonSet: one pod per node, such as log agents."] },
+  { q: "Requests vs limits?", a: [
+    "Requests drive scheduling. Limits cap usage.",
+    "Exceed the memory limit: OOMKilled. Exceed the CPU limit: throttled.",
+    "Requests equal to limits gives the Guaranteed QoS class."] },
+  { q: "Liveness vs readiness vs startup probes?", a: [
+    "Readiness: should this pod receive traffic?",
+    "Liveness: should it be restarted?",
+    "Startup: gives slow apps time before the other probes begin.",
+    "A bad liveness probe causes restart loops."] },
+  { q: "How do you autoscale?", a: [
+    "HPA scales pods. VPA adjusts requests. Cluster Autoscaler or Karpenter adds nodes.",
+    "Karpenter picks instance types dynamically and consolidates nodes.",
+    "KEDA can scale pods on SQS queue depth."] },
+  { q: "Service types and Ingress?", a: [
+    "ClusterIP (internal), NodePort, LoadBalancer.",
+    "Ingress with the AWS Load Balancer Controller creates an ALB. Use IP target mode to route straight to pods."] },
+  { q: "Rolling updates and rollback?", a: [
+    "Tune maxSurge and maxUnavailable. Roll back with `kubectl rollout undo`.",
+    "PodDisruptionBudgets protect availability during node drains.",
+    "Graceful shutdown: SIGTERM, preStop hook, adequate terminationGracePeriodSeconds."] },
+  { q: "How do you manage secrets and config?", a: [
+    "ConfigMap for non-secret config. Secrets are only base64 by default.",
+    "Better: External Secrets or the Secrets Store CSI driver with AWS Secrets Manager, plus KMS envelope encryption."] },
+  { q: "IRSA vs Pod Identity?", a: [
+    "Both give pods IAM roles with no static keys.",
+    "IRSA uses OIDC and a service account annotation. Pod Identity is simpler to manage and is the newer option."] },
+  { q: "RBAC, namespaces and isolation?", a: [
+    "Namespaces per environment or team, Role and RoleBinding, least privilege.",
+    "NetworkPolicies restrict pod traffic. For hard tenant isolation, use separate clusters or accounts."] },
+  { q: "How do you troubleshoot a failing pod?", a: [
+    "CrashLoopBackOff: `kubectl logs --previous`, then check config, secrets and probes.",
+    "Pending: `kubectl describe pod`. Usually resources, taints or no matching node.",
+    "OOMKilled: raise memory or fix the leak.",
+    "ImagePullBackOff: image name and ECR permissions.",
+    "ALB 502 or 504: readiness, target health, security groups, shutdown timing."] },
+  { q: "How do you upgrade EKS?", a: [
+    "Control plane first, then add-ons, then nodes, one minor version at a time.",
+    "Check deprecated APIs beforehand. Use blue/green node groups or Karpenter node rotation."] },
+  { q: "Managed node groups vs Fargate?", a: [
+    "Managed node groups: the normal choice, with more control.",
+    "Fargate: no node management, but limits (no DaemonSets) and a higher cost per pod."] },
+  { q: "How does networking work on EKS?", a: [
+    "The VPC CNI gives pods real VPC IPs, so you can run out of IPs.",
+    "Fixes: prefix delegation, secondary CIDR ranges, bigger subnets."] },
+  { q: "How do you control pod scheduling?", a: [
+    "Node selectors, affinity, taints and tolerations.",
+    "Topology spread constraints to spread pods across availability zones."] },
+  { q: "Helm vs Kustomize, and GitOps?", a: [
+    "Helm for packaged, parameterised releases. Kustomize for overlays.",
+    "ArgoCD keeps the cluster in sync with Git and gives auditable deploys."] },
+  { q: "How do you observe a Kubernetes workload?", a: [
+    "Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards, OTel collectors.",
+    "Alert on restarts, pending pods, node pressure, error rate and latency."] },
+  { q: "How do you control Kubernetes cost?", a: [
+    "Right-size requests, use Spot nodes for stateless workloads, enable Karpenter consolidation, scale non-prod down at night."] }
+]},
+
+{ id: 'i', title: 'I. Resume bullet drill: SQS, Lambda, EventBridge', intro: 'These come straight from the “distributed task processing” bullet.', items: [
+  { q: "Why SQS and not Kafka or Kinesis?", a: [
+    "It is a task queue, not an event log: each job is processed once by one worker.",
+    "No replay, multiple consumer groups or stream ordering was needed.",
+    "Zero ops, native Lambda integration, and pay-per-request pricing at spiky volume.",
+    "Choose Kafka or Kinesis when you need replay, ordering at scale or many independent consumers."] },
+  { q: "EventBridge Scheduler vs EventBridge rules vs a CronJob on EKS?", a: [
+    "Scheduler: purpose-built, supports one-time and recurring schedules, time zones, retries and a DLQ, and scales to millions of schedules.",
+    "Rules: meant for event-pattern matching, with weaker scheduling features.",
+    "CronJob on EKS: you manage the cluster and capacity. Better only for long-running jobs or special resources."] },
+  { q: "What if a Lambda task hits the 15-minute limit?", a: [
+    "Split it into smaller tasks, use Step Functions, or move that task to ECS/EKS."] },
+  { q: "What if the downstream database gets overwhelmed?", a: [
+    "Cap concurrency, add backoff, and rely on the DLQ for what can’t be processed."] },
+  { q: "How did you monitor it?", a: [
+    "Queue depth, age of the oldest message, DLQ count, Lambda errors and throttles.",
+    "Plus AgentCore Observability traces in CloudWatch."] },
+  { q: "How do you stop a scheduled job from running twice?", a: [
+    "Idempotency again: a run ID or lock checked before work starts, and idempotent handlers."] }
+]},
+
+{ id: 'j', title: 'J. Load and scale', intro: 'Use the numbers from the section above, or your real ones.', items: [
+  { q: "What load does the platform handle?", a: [
+    "Low on average and spiky around deadlines: about 40 notices a day, up to about 150 on busy days.",
+    "That is roughly 0.3 SQS messages a second on average and 5 to 10 a second at peak, with 20 to 50 concurrent Lambdas.",
+    "State clearly whether these are production, pilot or design figures."] },
+  { q: "Why EKS, SQS and Lambda for such a low load?", a: [
+    "The load is spiky around deadlines and portal syncs, not constantly high.",
+    "Queues give retries, isolation and backpressure for slow LLM and portal calls.",
+    "Serverless workers cost almost nothing when idle.",
+    "The hard problems are correctness, idempotency, audit and approvals, not volume."] },
+  { q: "What would you simplify if the load stayed this low?", a: [
+    "Run fewer, smaller nodes, or merge small services.",
+    "Consider moving the frontend to S3 and CloudFront, and reducing Redis if the cache hit benefit is small.",
+    "Keep the queue, the DLQ and the audit trail. They protect correctness, not scale."] },
+  { q: "How did you load test it?", a: [
+    "Replay a deadline-day workload at 2 to 3x, using a tool like k6 or Locust for the API and synthetic messages for SQS.",
+    "Measure p95 latency, queue drain time, DLQ rate, Lambda throttles and database connections.",
+    "Test failure too: a slow or down portal, Bedrock throttling, and a poison message.",
+    "Only quote results you actually ran."] },
+  { q: "What breaks first at 10x load?", a: [
+    "Bedrock quotas and throttling, and portal rate limits, before EKS pods.",
+    "Then database connections from Lambda (fixed with RDS Proxy and concurrency caps), and OCR duration.",
+    "Plan: quota increases, per-portal queues, backoff, and batching of OCR work."] },
+  { q: "How do you size HPA and Lambda concurrency?", a: [
+    "Start from measured peak and p95 latency, then add headroom of about 2x.",
+    "HPA on request rate or CPU with sensible min replicas for availability.",
+    "Cap Lambda concurrency by what the database and portals can safely take, not by what Lambda can scale to."] }
+]},
+
+{ id: 'k', title: 'K. Audit and governance', intro: 'See the audit list above for everything to record. These are the questions it leads to.', items: [
+  { q: "What do you audit in an AI-drafted reply?", a: [
+    "Prompts and model calls, guardrail results, agent steps and tool calls, human decisions, access, data and PII handling, cost, evaluations and changes, and submission evidence.",
+    "Every record is tied to the notice ID and the session ID so one query can rebuild the full story."] },
+  { q: "How do you prove which prompt, model and guardrail produced a draft?", a: [
+    "Store a run record with the draft: prompt version and hash, model ID and parameters, guardrail ID and version, runtime version, tool versions, and input document hashes.",
+    "Keep it append-only so it can’t be edited later."] },
+  { q: "How do you audit prompts without leaking client data?", a: [
+    "Redact PII before storing. Keep full prompts in encrypted S3 with tight access, and log who reads them.",
+    "Logs and traces carry IDs and hashes, not raw client text, where possible.",
+    "Apply retention rules and CloudWatch data protection."] },
+  { q: "How do guardrails work with AgentCore, and what do you log?", a: [
+    "Don’t assume they apply automatically to agent code. Apply them on your model calls, or call the ApplyGuardrail API on inputs and outputs. Verify the exact setup in the docs.",
+    "Log the guardrail ID and version, which policy fired (content, denied topic, PII, prompt attack, grounding), the action taken, and grounding scores.",
+    "Alert on spikes in blocks, which can signal abuse or prompt injection."] },
+  { q: "How do you handle prompt injection from notice documents?", a: [
+    "Treat notice text as untrusted data, never as instructions.",
+    "Use the guardrail prompt-attack filter on inputs. Keep tools read-only and give agents no submission tools.",
+    "Humans approve every reply. Test with injection samples and log blocked attempts."] },
+  { q: "Can you reproduce a draft months later?", a: [
+    "Models aren’t fully deterministic, so don’t rely on regenerating it.",
+    "Keep the stored output, the inputs and all versions. Re-running is only for comparison."] },
+  { q: "How do you make audit records tamper-evident?", a: [
+    "Append-only table with no update or delete rights for the application.",
+    "S3 Object Lock for stored prompts, CloudTrail log file validation, and optionally a hash chain.",
+    "Send logs to a separate account where possible."] },
+  { q: "How long do you keep prompt and trace logs?", a: [
+    "Follow client and legal retention, which is often years for audit evidence, and balance it against privacy.",
+    "Typically keep decision records longest and raw traces shorter. Decide with compliance and say it is policy-driven."] }
+]}
+];
+
+const K = 'interview-prep-practiced-v1';
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(K) || '{}'); } catch (e) { return {}; } },
+  set(v) { try { localStorage.setItem(K, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+let done = store.get();
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+const qa = document.getElementById('qa');
+qa.innerHTML = SECTIONS.map(s => `
+  <section id="${s.id}" data-section="${s.id}">
+    <h2>${esc(s.title)}</h2>
+    ${s.intro ? `<p class="intro">${esc(s.intro)}</p>` : ''}
+    ${s.items.map((it, i) => {
+      const id = s.id + '-' + i;
+      return `<details class="qa ${done[id] ? 'done' : ''}" data-id="${id}">
+        <summary><span class="q">${fmt(it.q)}</span></summary>
+        <div class="a"><ul class="pts">${it.a.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>
+        <label class="practice"><input type="checkbox" ${done[id] ? 'checked' : ''}> Mark as practiced</label></div>
+      </details>`;
+    }).join('')}
+  </section>`).join('');
+
+const toc = document.getElementById('toc');
+const fixed = [['tmay', 'Tell me about yourself'], ['walk', 'Project walkthrough'], ['diagrams', 'Flowcharts'], ['numbers', 'Production numbers and load'], ['audit', 'Audit and governance list']];
+toc.insertAdjacentHTML('beforeend',
+  fixed.map(([id, t]) => `<a href="#${id}">${t}</a>`).join('') +
+  SECTIONS.map(s => `<a href="#${s.id}">${esc(s.title)} <small>${s.items.length}</small></a>`).join(''));
+
+const NUMBERS = [
+  { id: 'avg', label: 'Average load', rows: [
+    ['API requests', '2 to 5 per second', ''],
+    ['SQS messages', 'About 0.3 per second', '25,000 a day'],
+    ['Lambda invocations', 'About 1 per second', '50,000 to 100,000 a day'],
+    ['Agent runs', 'One every few minutes', '40 to 150 notices a day'],
+    ['OCR pages', 'About 1 per minute', '1,500 a day'],
+    ['Portal calls', 'About 0.2 per second', '15,000 to 20,000 a day']] },
+  { id: 'peak', label: 'Peak load', rows: [
+    ['Concurrent users', 'About 100', 'Office hours, deadline days'],
+    ['API requests', '20 to 40 per second', ''],
+    ['SQS messages', '5 to 10 per second', 'Portal syncs and deadlines'],
+    ['Lambda concurrency', '20 to 50', ''],
+    ['Concurrent agent runs', '5 to 10', ''],
+    ['Tokens per day', 'About 9 million', 'On a 150-notice day']] },
+  { id: 'scale', label: 'Scale', rows: [
+    ['Clients (tenants)', 'About 600 companies', ''],
+    ['Staff users', 'About 300', ''],
+    ['Notices', '40 a day average, up to 150', 'About 10,000 a year'],
+    ['Documents', '1 to 3 PDFs per notice', '2 to 50 pages each'],
+    ['Portal syncs', 'Every 3 to 6 hours', '5 portals']] },
+  { id: 'queues', label: 'Queues and Lambda', rows: [
+    ['SQS volume', 'About 25,000 messages a day', ''],
+    ['Portal worker cap', '10 to 20 concurrent', 'Set on the event source mapping'],
+    ['Persistence worker', '200 to 500 ms', ''],
+    ['OCR extraction', '5 to 30 seconds', ''],
+    ['Agent invocation', '30 to 90 seconds', ''],
+    ['DLQ rate', 'Under 0.5% of messages', ''],
+    ['Duplicate processing', 'Under 0.1%', 'Thanks to idempotency keys']] },
+  { id: 'ai', label: 'AI agents', rows: [
+    ['End-to-end analyse and draft', '30 to 90 seconds', ''],
+    ['Tokens per notice', '25,000 to 60,000', ''],
+    ['Cost per notice', 'About US$0.10 to $0.50', 'Check current Bedrock pricing'],
+    ['Critic passes first time', '60 to 75%', ''],
+    ['Average revisions', '0.3 to 0.6', 'Capped at 2'],
+    ['Drafts accepted with minor edits', '60 to 80%', 'Humans change 10 to 30% of text'],
+    ['Time to prepare a reply', '2 to 4 hours down to 20 to 40 minutes', '']] },
+  { id: 'auto', label: 'Automation and OCR', rows: [
+    ['OCR field accuracy', '92 to 97% clean, 85 to 90% poor scans', ''],
+    ['Notice-type classification', '95% or higher', ''],
+    ['API channel success', '70 to 85%', ''],
+    ['Overall submission success', '97 to 99%', 'With web and RPA fallbacks'],
+    ['Manual submission needed', '1 to 3% of notices', '']] },
+  { id: 'plat', label: 'EKS and platform', rows: [
+    ['Nodes', '3 to 6 across 3 availability zones', ''],
+    ['Backend pods', '3 to 6, HPA up to 10', ''],
+    ['Frontend pods', '2 to 3', ''],
+    ['API p95 latency', '150 to 400 ms', ''],
+    ['Redis cache hit rate', '85 to 95%', ''],
+    ['Database', 'Aurora PostgreSQL, 1 writer and 1 reader, 50 to 200 GB', ''],
+    ['S3 documents', '0.5 to 2 TB', ''],
+    ['Availability target', '99.5 to 99.9%', ''],
+    ['Deployments and CI build', 'Weekly or fortnightly, 8 to 12 minutes', ''],
+    ['AWS bill', 'About US$1,500 to $4,000 a month', 'Bedrock is the most variable part'],
+    ['Audit log entries per notice', '20 to 40', ''],
+    ['Data retention', '6 to 8 years', 'Follow the client’s policy']] }
+];
+const RK = 'interview-prep-real-numbers-v1';
+let real = {};
+try { real = JSON.parse(localStorage.getItem(RK) || '{}'); } catch (e) { real = {}; }
+let curTab = 'avg';
+function renderNumbers() {
+  document.getElementById('numtabs').innerHTML = NUMBERS.map(t =>
+    `<button role="tab" data-tab="${t.id}" aria-selected="${t.id === curTab}">${esc(t.label)}</button>`).join('');
+  const t = NUMBERS.find(x => x.id === curTab);
+  document.getElementById('numpanel').innerHTML = `<table class="nums"><thead><tr><th>Metric</th><th>Example figure</th><th>Notes</th><th>Your real figure</th></tr></thead><tbody>` +
+    t.rows.map((r, i) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td><input type="text" data-key="${t.id}-${i}" aria-label="Your real figure for ${esc(r[0])}" value="${esc(real[t.id + '-' + i] || '')}"></td></tr>`).join('') +
+    `</tbody></table>`;
+}
+document.getElementById('numtabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  curTab = b.dataset.tab; renderNumbers();
+});
+document.getElementById('numpanel').addEventListener('input', e => {
+  const k = e.target.dataset.key; if (!k) return;
+  if (e.target.value) real[k] = e.target.value; else delete real[k];
+  try { localStorage.setItem(RK, JSON.stringify(real)); } catch (err) { /* storage unavailable */ }
+});
+renderNumbers();
+
+const AUDIT = [
+  { id: 'prompts', label: 'Prompts and models', rows: [
+    ['Prompt version and hash', 'Template ID, version and hash on every run record', 'Git, plus the run record in the database', 'Proves which instructions produced a draft'],
+    ['Rendered prompt (redacted)', 'Final prompt after variables are filled, with PII masked', 'Encrypted S3 with restricted access, linked by notice ID', 'Lets you reconstruct any draft'],
+    ['Model call details', 'Model ID, parameters, response, stop reason, token counts', 'Bedrock model invocation logging to S3 or CloudWatch', 'Reproducibility and model-change analysis'],
+    ['Input sources', 'Which documents, pages and tool outputs were in context', 'Run record with document IDs and hashes', 'Traces every fact back to its source'],
+    ['Prompt change history', 'Who changed it, the diff, who approved', 'Git history and pull request approvals', 'Change-control evidence']] },
+  { id: 'guard', label: 'Guardrails', rows: [
+    ['Guardrail ID and version', 'Which guardrail version was active per run', 'Run record', 'Shows which policy applied'],
+    ['Interventions', 'Which filter fired (content, denied topic, PII, prompt attack, grounding), on input or output, and the action', 'Guardrail results logged to CloudWatch', 'Shows controls work; helps tune false positives'],
+    ['Grounding scores', 'Contextual grounding and relevance scores per draft', 'Saved on the draft record', 'Evidence against hallucination'],
+    ['Block and mask statistics', 'Counts over time, with alarms on spikes', 'CloudWatch metrics', 'Detects abuse or prompt injection'],
+    ['Guardrail change log', 'Version diff and approver', 'Git and CloudTrail', 'Change-control evidence']] },
+  { id: 'agents', label: 'Agents and tools', rows: [
+    ['Session and trace', 'Session ID, a span per agent step, latency, tokens', 'AgentCore Observability to CloudWatch', 'Lets you replay what the agents did'],
+    ['Tool calls', 'Tool name, arguments, result summary, duration, errors', 'Gateway and runtime traces, plus tool Lambda logs', 'Shows exactly what data the agent touched'],
+    ['Tool catalogue', 'Registered MCP tools, schemas, versions and owners', 'Gateway configuration kept in infrastructure as code', 'Documents what the agent is able to do'],
+    ['Routing decisions', 'Which sub-agent ran, in what order, and how many revisions', 'Trace attributes and the run record', 'Explains behaviour and proves the loop cap'],
+    ['Critic results', 'Scores, issues found, revisions made', 'Saved on the draft record', 'Quality evidence'],
+    ['Session isolation', 'One microVM per session, no data shared between sessions', 'Runtime configuration', 'Tenant isolation story']] },
+  { id: 'people', label: 'People and access', rows: [
+    ['Human decisions', 'Who, when, approve or reject, comment, draft version', 'Append-only audit table in the database', 'Core compliance evidence'],
+    ['Agent identity', 'Which role or credentials the agent used, and for whom', 'AgentCore Identity (if used) and an IAM role per agent and tool', 'Proves least privilege'],
+    ['AWS activity', 'API and console actions, data events for Lambda and S3', 'CloudTrail with log file validation', 'Shows who changed what in AWS'],
+    ['Access to logs', 'Who read stored prompts and traces', 'S3 access logs, CloudTrail data events, KMS keys', 'Prompts contain client data'],
+    ['Self-approval checks', 'Rejected attempts where the same person tried to approve their own work', 'Backend audit table', 'Proves four-eyes control']] },
+  { id: 'data', label: 'Data and cost', rows: [
+    ['PII handling', 'What was masked before logging or indexing', 'Guardrail PII filters and log data protection', 'Privacy evidence'],
+    ['Retention and deletion', 'Retention per tenant, deletion requests carried out', 'S3 lifecycle rules and database jobs', 'Meets the 6 to 8 year audit expectation without over-keeping'],
+    ['Cost and usage', 'Tokens and cost per notice, per tenant and per agent', 'Cost tags, CloudWatch metrics, Cost Explorer', 'Chargeback and runaway-cost detection'],
+    ['Memory contents', 'What persisted across sessions, if AgentCore Memory is used', 'Memory records with a TTL', 'Prevents cross-session leakage'],
+    ['Submission evidence', 'Attempts per channel, acknowledgement IDs, screenshots', 'Database and S3', 'Proof of filing']] },
+  { id: 'change', label: 'Change and evidence', rows: [
+    ['Evaluation runs', 'Golden-set score per prompt, model and guardrail version, with a pass or fail gate', 'Evaluation results table (AgentCore Evaluations if available)', 'Shows changes were tested before release'],
+    ['Release record', 'Runtime version, who promoted it, when, and rollback', 'CI/CD history and runtime versions', 'Change control'],
+    ['Tamper evidence', 'Append-only records, S3 Object Lock, hash chain', 'Database permissions, S3, CloudTrail validation', 'Records can’t be quietly altered'],
+    ['Incident log', 'Failures, escalations and overrides with follow-up', 'Ticketing system and audit table', 'Shows problems were handled'],
+    ['Evidence pack export', 'One query returns the full story for a notice', 'Run record, S3 and traces joined by notice ID', 'This is what auditors ask for']] }
+];
+let curAudit = 'prompts';
+function renderAudit() {
+  document.getElementById('audittabs').innerHTML = AUDIT.map(t =>
+    `<button role="tab" data-tab="${t.id}" aria-selected="${t.id === curAudit}">${esc(t.label)}</button>`).join('');
+  const t = AUDIT.find(x => x.id === curAudit);
+  document.getElementById('auditpanel').innerHTML = `<table class="nums"><thead><tr><th>Item</th><th>What to record</th><th>Where it lives</th><th>Why it matters</th></tr></thead><tbody>` +
+    t.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') + `</tbody></table>`;
+}
+document.getElementById('audittabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  curAudit = b.dataset.tab; renderAudit();
+});
+renderAudit();
+
+const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
+function updateProgress() {
+  const n = Object.keys(done).filter(k => done[k]).length;
+  document.getElementById('progress').textContent = `${n} of ${total} questions practiced`;
+  document.getElementById('barfill').style.width = (n / total * 100) + '%';
+}
+updateProgress();
+
+qa.addEventListener('change', e => {
+  if (e.target.type !== 'checkbox') return;
+  const d = e.target.closest('details.qa'); const id = d.dataset.id;
+  if (e.target.checked) done[id] = true; else delete done[id];
+  d.classList.toggle('done', !!done[id]);
+  store.set(done); updateProgress();
+});
+
+const all = () => [...document.querySelectorAll('details.qa')];
+document.getElementById('expand').addEventListener('click', () => all().filter(d => !d.classList.contains('hidden')).forEach(d => { d.open = true; }));
+document.getElementById('collapse').addEventListener('click', () => all().forEach(d => { d.open = false; }));
+window.addEventListener('beforeprint', () => all().forEach(d => { d.open = true; }));
+
+document.getElementById('q').addEventListener('input', e => {
+  const term = e.target.value.trim().toLowerCase();
+  all().forEach(d => {
+    const hit = !term || d.textContent.toLowerCase().includes(term);
+    d.classList.toggle('hidden', !hit);
+    if (term && hit) d.open = true;
+  });
+  document.querySelectorAll('#qa section').forEach(sec => {
+    const any = sec.querySelector('details.qa:not(.hidden)');
+    sec.classList.toggle('hidden', !!term && !any);
+  });
+});
+})();
+</script>
+</body>
+</html>

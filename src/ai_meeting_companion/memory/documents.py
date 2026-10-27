@@ -7,7 +7,7 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 EXTENSIONS = {".md"}
-MAX_CHARS = 30_000  # total across all files; keeps the system prompt (and cost) bounded
+MAX_CHARS = 45_000  # total across all files; keeps the system prompt (and cost) bounded
 
 
 @dataclass(frozen=True)

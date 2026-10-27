@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
 from typing import Callable, Sequence
 from uuid import UUID
@@ -14,6 +15,32 @@ from ai_meeting_companion.session.store import SessionStore
 log = logging.getLogger(__name__)
 
 AgentFactory = Callable[[Bus, SessionMemory], Sequence[BaseAgent]]
+
+
+SHUTDOWN_DB_SECS = 20
+
+
+def _bounded(action: Callable[[], None], what: str, secs: float = SHUTDOWN_DB_SECS) -> bool:
+    """Run a database step at shutdown, but never wait longer than ``secs``: if Postgres has gone away (the WSL VM
+    stops when idle) the app must still exit instead of lingering as a hidden process."""
+    outcome: list[BaseException] = []
+
+    def run() -> None:
+        try:
+            action()
+        except BaseException as exc:  # noqa: BLE001 - reported below, must not escape the thread
+            outcome.append(exc)
+
+    worker = threading.Thread(target=run, name="shutdown-db", daemon=True)
+    worker.start()
+    worker.join(secs)
+    if worker.is_alive():
+        log.warning("gave up %s after %.0f s: the database is not answering", what, secs)
+        return False
+    if outcome:
+        log.warning("failed %s: %s", what, outcome[0])
+        return False
+    return True
 
 
 class Orchestrator:
@@ -50,13 +77,13 @@ class Orchestrator:
                     log.exception("failed to stop %s", agent.name)
             if self._logger is not None:
                 self._logger.stop()
-                self._logger.drain()
+                _bounded(self._logger.drain, "writing the last events")
         except KeyboardInterrupt:
             log.warning("interrupted during shutdown; closing the session now")
         finally:
             # Always mark the session ended, even if shutdown was cut short.
             if self.thread_id is not None:
-                self.store.end_thread(self.thread_id)
+                _bounded(lambda: self.store.end_thread(self.thread_id), "marking the session ended")
 
     def run_until_interrupted(self) -> UUID:
         thread_id = self.start()

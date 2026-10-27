@@ -10,6 +10,7 @@ from ai_meeting_companion.core.events import (
     LLM_RESPONSE,
     SCREEN_TEXT,
     STATUS,
+    SCREENSHOT_REQUEST,
     SUGGEST_REQUEST,
     TRANSCRIPT,
     USER_MESSAGE,
@@ -72,7 +73,7 @@ class SessionLogger(BaseAgent):
         super().start()
 
     def handle(self, event: Event) -> None:
-        if event.kind in (STATUS, SUGGEST_REQUEST):
+        if event.kind in (STATUS, SUGGEST_REQUEST, SCREENSHOT_REQUEST):
             return
         try:
             self.store.add_message(self.thread_id, event_to_message(event))

@@ -13,6 +13,8 @@ ERROR = "error"
 STATUS = "status"  # transient progress text for the UI; never logged
 SUGGEST_REQUEST = "suggest_request"  # user asks the Conversor for a suggestion now; never logged
 
+SCREENSHOT_REQUEST = "screenshot_request"  # user asks for a screen capture now (button; the hotkey does the same); never logged
+
 # Payload conventions (all carry "text"):
 #   transcript:    {"text", "channel"?}            channel: "loopback" | "mic"
 #   screen_text:   {"text"}
@@ -21,6 +23,7 @@ SUGGEST_REQUEST = "suggest_request"  # user asks the Conversor for a suggestion 
 #   error:         {"text", "agent"?}
 #   status:        {"text"}
 #   suggest_request: {}
+#   screenshot_request: {}
 
 
 def _now() -> datetime:

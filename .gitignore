@@ -17,3 +17,9 @@ build/
 selftest.txt
 *.log
 overlay_position.json
+
+# Personal notes the user keeps for themselves (not used by the app)
+projects/
+
+# Personal interview-prep pages and their data
+prep/

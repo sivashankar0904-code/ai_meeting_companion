@@ -49,7 +49,12 @@ def build_agents(
     background = docs.text
     agents: list[BaseAgent] = [
         Conversor(
-            bus, make_chat_model(settings.conversor_model, key, max_tokens=1024), settings.conversor_model,
+            bus,
+            make_chat_model(
+                settings.conversor_model, key, max_tokens=2048,  # thinking models spend part of this on reasoning
+                fast=settings.conversor_fast, effort=settings.conversor_effort,
+            ),
+            settings.conversor_model,
             background=background, memory=memory, memory_chars=settings.session_memory_chars,
         ),
         ScreenAnalyzer(

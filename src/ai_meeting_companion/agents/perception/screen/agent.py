@@ -9,13 +9,15 @@ from ai_meeting_companion.agents.perception.screen.hotkey import HotkeyListener
 from ai_meeting_companion.agents.perception.screen.ocr import Ocr
 from ai_meeting_companion.core.agent import POLL_SECS, BaseAgent
 from ai_meeting_companion.core.bus import Bus
-from ai_meeting_companion.core.events import SCREEN_TEXT, Event
+from ai_meeting_companion.core.events import SCREEN_TEXT, SCREENSHOT_REQUEST, Event
 
 
 class ScreenAgent(BaseAgent):
-    """On hotkey: screenshot -> OCR -> screen_text event. Empty or unchanged text is skipped."""
+    """On hotkey or ``screenshot_request`` (overlay button): screenshot -> OCR -> screen_text event.
+    Empty or unchanged text is skipped."""
 
     name = "screen"
+    kinds = frozenset({SCREENSHOT_REQUEST})
 
     def __init__(
         self,
@@ -50,7 +52,9 @@ class ScreenAgent(BaseAgent):
             self._listener = self._listener_factory(self.trigger)
             self._listener.start()
         while not self.stopping:
-            if self._requested.wait(POLL_SECS):
+            if self._sub is not None and self._sub.get(timeout=POLL_SECS) is not None:
+                self._requested.set()
+            if self._requested.is_set():
                 self._requested.clear()
                 self._guarded(self.capture_once)
 
