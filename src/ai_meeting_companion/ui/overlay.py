@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from html import escape
 from typing import Callable
 
@@ -30,7 +31,7 @@ from ai_meeting_companion.core.events import (
     Event,
 )
 from ai_meeting_companion import config
-from ai_meeting_companion.ui import tiles, win32
+from ai_meeting_companion.ui import macos, tiles, win32
 from ai_meeting_companion.ui.icons import make_icon
 
 WIDTH, HEIGHT, MARGIN = 460, 580, 24
@@ -95,6 +96,7 @@ class OverlayWindow(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)  # macOS hides Tool windows when the app is inactive
         self.setWindowOpacity(opacity)
         self.setStyleSheet(STYLE)
         self.resize(WIDTH, HEIGHT)
@@ -252,7 +254,8 @@ class OverlayWindow(QWidget):
         if not self._hide_from_capture:
             self.capture_hidden = False
         else:
-            self.capture_hidden = win32.set_capture_excluded(int(self.winId()), True)
+            hwnd = int(self.winId())
+            self.capture_hidden = (macos if sys.platform == "darwin" else win32).set_capture_excluded(hwnd, True)
         # Silent when it works (or is switched off); only a refusal by Windows is worth header space.
         failed = self._hide_from_capture and not self.capture_hidden
         self.capture_label.setText("VISIBLE to screen share" if failed else "")

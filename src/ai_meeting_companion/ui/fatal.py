@@ -5,6 +5,12 @@ import sys
 
 def show_error(title: str, message: str) -> None:
     """Show a message box. The packaged exe has no console, so this is how startup problems reach the user."""
+    if sys.platform == "darwin":
+        import subprocess
+
+        script = f"display alert {_q(title)} message {_q(message)} as critical"
+        subprocess.run(["osascript", "-e", script], check=False)
+        return
     if sys.platform != "win32":
         print(f"{title}: {message}", file=sys.stderr)
         return
@@ -12,3 +18,7 @@ def show_error(title: str, message: str) -> None:
 
     MB_OK, MB_ICONERROR, MB_TOPMOST = 0x0, 0x10, 0x40000
     ctypes.windll.user32.MessageBoxW(None, message, title, MB_OK | MB_ICONERROR | MB_TOPMOST)
+
+
+def _q(text: str) -> str:
+    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'

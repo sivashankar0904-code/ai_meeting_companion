@@ -84,7 +84,7 @@ class WhisperTranscriber:
     """
 
     def __init__(
-        self, model_size: str = "small.en", terms: Sequence[str] = (), prompt: str = "", device: str = "auto"
+        self, model_size: str = "medium.en", terms: Sequence[str] = (), prompt: str = "", device: str = "auto"
     ) -> None:
         self.model_size = model_size
         self.requested_device = device

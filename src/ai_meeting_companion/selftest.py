@@ -14,14 +14,14 @@ from ai_meeting_companion.config import PROJECT_ROOT, find_env_file, load_settin
 Check = Callable[[], str]
 
 MODULES = [
-    "PyQt6.QtWidgets", "faster_whisper", "ctranslate2", "sounddevice", "pyaudiowpatch", "mss", "pytesseract",
+    "PyQt6.QtWidgets", "faster_whisper", "ctranslate2", "sounddevice", "mss", "pytesseract",
     "pynput.keyboard", "sqlalchemy.dialects.postgresql", "psycopg", "langchain_anthropic", "anthropic", "dotenv",
 ]
 PROMPTS = ["conversor", "screen_analyzer", "chat", "shared_memory"]
 
 
 def _imports() -> str:
-    for name in MODULES:
+    for name in MODULES + (["pyaudiowpatch"] if sys.platform == "win32" else ["Quartz"]):
         importlib.import_module(name)
     return f"{len(MODULES)} libraries import"
 
@@ -66,21 +66,26 @@ def _gpu() -> str:
     add_cuda_dll_dirs()
     if not cuda_available():
         return "no CUDA device: speech recognition will use the CPU (slower)"
-    import ctypes
+    if sys.platform == "win32":
+        import ctypes
 
-    ctypes.WinDLL("cublas64_12.dll")
+        ctypes.WinDLL("cublas64_12.dll")
     return "CUDA device and cuBLAS available: speech recognition will use the GPU"
 
 
 def _audio() -> str:
-    import pyaudiowpatch as pyaudio
     import sounddevice as sd
 
-    pa = pyaudio.PyAudio()
-    try:
-        loopbacks = [d["name"] for d in pa.get_loopback_device_info_generator()]
-    finally:
-        pa.terminate()
+    if sys.platform == "darwin":
+        loopbacks = [d["name"] for d in sd.query_devices() if d["max_input_channels"] > 0 and "blackhole" in d["name"].lower()]
+    else:
+        import pyaudiowpatch as pyaudio
+
+        pa = pyaudio.PyAudio()
+        try:
+            loopbacks = [d["name"] for d in pa.get_loopback_device_info_generator()]
+        finally:
+            pa.terminate()
     mics = [d for d in sd.query_devices() if d["max_input_channels"] > 0]
     return f"{len(loopbacks)} loopback device(s), {len(mics)} input device(s)"
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import queue
+import sys
 import threading
 from typing import Callable, Iterator, Protocol
 
@@ -47,25 +48,20 @@ class LoopbackSource:
 
     channel = "loopback"
 
-    def __init__(self, chunk_secs: float = 6.0) -> None:
+    def __init__(self, chunk_secs: float = 6.0, device: str = "") -> None:
         self.chunk_secs = chunk_secs
+        self.device = device  # macOS only: the virtual input device carrying system audio
         self.on_status: Callable[[str], None] | None = None  # set by the AudioAgent
 
     def _say(self, message: str) -> None:
         if self.on_status is not None:
             self.on_status(message)
 
-    def chunks(self, stop: threading.Event) -> Iterator[np.ndarray]:
+    def _open_windows(self, on_chunk):
+        """WASAPI loopback of the default output device. Returns (close, rate, channels, name)."""
         import pyaudiowpatch as pyaudio
 
         pa = pyaudio.PyAudio()
-        stream = None
-        incoming: queue.Queue[bytes] = queue.Queue()
-
-        def on_audio(in_data, frame_count, time_info, status):
-            incoming.put(in_data)
-            return (None, pyaudio.paContinue)
-
         try:
             wasapi = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
             device = pa.get_device_info_by_index(wasapi["defaultOutputDevice"])
@@ -78,12 +74,53 @@ class LoopbackSource:
                     raise RuntimeError("No WASAPI loopback device found for the default output device.")
             rate = int(device["defaultSampleRate"])
             channels = int(device["maxInputChannels"])
-            name = str(device["name"])
-            self._say(f"Listening on: {name}")
             stream = pa.open(
                 format=pyaudio.paInt16, channels=channels, rate=rate, input=True,
-                input_device_index=device["index"], frames_per_buffer=1024, stream_callback=on_audio,
+                input_device_index=device["index"], frames_per_buffer=1024,
+                stream_callback=lambda data, *_: (on_chunk(np.frombuffer(data, dtype=np.int16)
+                                                           .astype(np.float32) / 32768.0), pyaudio.paContinue)[1],
             )
+        except Exception:
+            pa.terminate()
+            raise
+
+        def close() -> None:
+            stream.stop_stream()
+            stream.close()
+            pa.terminate()
+
+        return close, rate, channels, str(device["name"])
+
+    def _open_macos(self, on_chunk):
+        """macOS has no loopback API: record a virtual device (BlackHole, Loopback...) that the meeting
+        audio is routed to. Returns (close, rate, channels, name)."""
+        import sounddevice as sd
+
+        spec = self.device or "BlackHole"
+        index = resolve_input_device(spec)
+        if index is None:
+            raise RuntimeError("Set AUDIO_LOOPBACK_DEVICE to the virtual device that carries meeting audio.")
+        info = sd.query_devices(index)
+        rate, channels = int(info["default_samplerate"]), max(1, min(int(info["max_input_channels"]), 2))
+        stream = sd.InputStream(
+            samplerate=rate, channels=channels, dtype="float32", device=index,
+            callback=lambda data, *_: on_chunk(data.reshape(-1).copy()),
+        )
+        stream.start()
+
+        def close() -> None:
+            stream.stop()
+            stream.close()
+
+        return close, rate, channels, str(info["name"])
+
+    def chunks(self, stop: threading.Event) -> Iterator[np.ndarray]:
+        incoming: queue.Queue[np.ndarray] = queue.Queue()
+        close = None
+        try:
+            opener = self._open_macos if sys.platform == "darwin" else self._open_windows
+            close, rate, channels, name = opener(incoming.put)
+            self._say(f"Listening on: {name}")
             target = int(rate * self.chunk_secs)
             parts: list[np.ndarray] = []
             have = 0
@@ -106,21 +143,32 @@ class LoopbackSource:
                         yield resample(np.concatenate(parts), rate)
                         parts, have = [], 0
                     continue
+                mono = raw.reshape(-1, channels).mean(axis=1)
+                if is_silent(mono):  # virtual devices (BlackHole) stream silence instead of going quiet
+                    idle += mono.size / rate
+                    quiet_for += mono.size / rate
+                    if quiet_for >= NO_SOUND_WARN_SECS and (warned_at == 0.0 or quiet_for - warned_at >= 30.0):
+                        warned_at = quiet_for
+                        self._say(f"No sound from {name} for {int(quiet_for)}s. Is the meeting audio playing on this output device?")
+                    if parts and idle >= FLUSH_IDLE_SECS:
+                        if have >= MIN_FLUSH_SECS * rate:
+                            yield resample(np.concatenate(parts), rate)
+                        parts, have = [], 0
+                    elif parts:
+                        parts.append(mono)
+                        have += mono.size
+                    continue
                 idle = 0.0
                 quiet_for = 0.0
                 warned_at = 0.0
-                pcm = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-                mono = pcm.reshape(-1, channels).mean(axis=1)
                 parts.append(mono)
                 have += mono.size
                 if have >= target:
                     yield resample(np.concatenate(parts), rate)
                     parts, have = [], 0
         finally:
-            if stream is not None:
-                stream.stop_stream()
-                stream.close()
-            pa.terminate()
+            if close is not None:
+                close()
 
 
 def list_input_devices() -> list[tuple[int, str, str]]:

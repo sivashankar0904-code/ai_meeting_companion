@@ -41,7 +41,13 @@ def resolve_tesseract(configured: str = "") -> str:
     if configured:
         return configured
     bundled = PROJECT_ROOT / "tesseract" / "tesseract.exe"
-    return str(bundled) if bundled.is_file() else ""
+    if bundled.is_file():
+        return str(bundled)
+    if sys.platform == "darwin":  # GUI launches do not inherit the shell PATH that has Homebrew
+        for brew in ("/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract"):
+            if Path(brew).is_file():
+                return brew
+    return ""
 
 
 @dataclass(frozen=True)
@@ -76,7 +82,7 @@ class Settings:
     screen_model: str = "claude-sonnet-5-5"
     chat_model: str = "claude-sonnet-5-5"
     db: DbSettings = DbSettings()
-    whisper_model: str = "small.en"
+    whisper_model: str = "medium.en"
     whisper_device: str = "auto"  # auto | cuda | cpu
     whisper_hotwords: str = ""  # extra names/terms to spell correctly (space or comma separated)
     whisper_prompt: str = ""  # optional free text about the conversation
@@ -98,6 +104,7 @@ class Settings:
     overlay_move_down_hotkey: str = "<ctrl>+<shift>+<down>"
     audio_mic: bool = True
     audio_mic_device: str = ""
+    audio_loopback_device: str = ""  # macOS: virtual device (BlackHole...) that carries meeting audio
     audio_chunk_secs: float = 6.0
 
 
@@ -180,5 +187,6 @@ def load_settings(env: Mapping[str, str] | None = None, *, require_api_key: bool
         overlay_move_down_hotkey=_text(env, "OVERLAY_MOVE_DOWN_HOTKEY", s.overlay_move_down_hotkey),
         audio_mic=_flag(env.get("AUDIO_MIC"), s.audio_mic),
         audio_mic_device=env.get("AUDIO_MIC_DEVICE", "").strip(),
+        audio_loopback_device=env.get("AUDIO_LOOPBACK_DEVICE", "").strip(),
         audio_chunk_secs=float(_text(env, "AUDIO_CHUNK_SECS", str(s.audio_chunk_secs))),
     )

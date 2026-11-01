@@ -69,7 +69,7 @@ def build_agents(
     if terminal:  # console output and typed input; the overlay replaces both
         agents += [ConsolePrinter(bus), ManualInputAgent(bus)]
     if audio:
-        sources = [LoopbackSource(settings.audio_chunk_secs)]
+        sources = [LoopbackSource(settings.audio_chunk_secs, settings.audio_loopback_device)]
         if settings.audio_mic:
             sources.append(MicSource(settings.audio_chunk_secs, settings.audio_mic_device))
         agents.append(AudioAgent(bus, sources, WhisperTranscriber(settings.whisper_model, speech_terms(settings, docs), settings.whisper_prompt, settings.whisper_device)))

@@ -49,6 +49,9 @@ def _print_devices() -> int:
     print("Microphones (set AUDIO_MIC_DEVICE to a number or part of a name):")
     for index, name, api in list_input_devices():
         print(f"  [{index}] {name}  ({api}){'   <- default' if index == default_in else ''}")
+    if sys.platform == "darwin":
+        print("\nMeeting audio needs a virtual device (e.g. BlackHole) as the loopback input; set AUDIO_LOOPBACK_DEVICE to its name.")
+        return 0
     try:
         import pyaudiowpatch as pyaudio
 
