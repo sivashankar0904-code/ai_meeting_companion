@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,9 +14,18 @@ from sqlalchemy.engine import URL
 def app_dir() -> Path:
     """Where the user's files live: .env, context/, tesseract/ and the log.
 
-    Next to the .exe when frozen by PyInstaller, otherwise the project root
+    Next to the .exe when frozen by PyInstaller. For the macOS .app that is the folder holding the .app
+    (X.app/Contents/MacOS/X -> four levels up), unless it is not writable or is /Applications, then
+    ``~/Library/Application Support/AIMeetingCompanion``. Otherwise the project root
     (config.py -> ai_meeting_companion -> src -> project root)."""
     if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            beside = Path(sys.executable).resolve().parents[3]
+            if beside.name != "Applications" and os.access(beside, os.W_OK):
+                return beside
+            folder = Path.home() / "Library" / "Application Support" / "AIMeetingCompanion"
+            folder.mkdir(parents=True, exist_ok=True)
+            return folder
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parents[2]
 
