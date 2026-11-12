@@ -4,17 +4,20 @@
     uv run python scripts/build_app_macos.py --dest ~/Meeting   # assemble the folder there instead
     uv run python scripts/build_app_macos.py --dock             # keep a Dock icon (default: none)
     uv run python scripts/build_app_macos.py --no-env           # do not copy your .env (it holds your API key)
+    uv run python scripts/build_app_macos.py --sign-identity "Apple Development: you@example.com (TEAMID)"
 
 Result: a folder with ``AIMeetingCompanion.app`` and, beside it, everything you edit: ``.env``, ``context/``,
 ``.env.example``, ``HOW_TO_RUN.txt`` (and later ``prompts/``, the log). The app reads those files from its own
 folder, so move the whole folder together. Re-running replaces only the .app; files already in the folder
-(an edited .env or context/) are kept. Tesseract is not bundled: ``brew install tesseract``. The app is signed ad
-hoc, so macOS asks again for Screen Recording / Accessibility / Input Monitoring after every rebuild.
+(an edited .env or context/) are kept. Tesseract is not bundled: ``brew install tesseract``. By default the
+app is signed ad hoc, so macOS forgets Accessibility / Input Monitoring after every rebuild; sign with a keychain
+certificate (--sign-identity or $CODESIGN_IDENTITY) and the grants survive rebuilds.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import plistlib
 import shutil
 import subprocess
@@ -63,14 +66,18 @@ def build(args: argparse.Namespace) -> Path:
     return STAGING / f"{args.name}.app"
 
 
-def patch_and_sign(app: Path, dock: bool) -> None:
-    """Add the permission text macOS requires, hide the Dock icon, then sign again (editing breaks the signature)."""
+def patch_and_sign(app: Path, dock: bool, identity: str) -> None:
+    """Add the permission text macOS requires, hide the Dock icon, then sign again (editing breaks the signature).
+
+    ``identity`` "-" is an ad-hoc signature (new hash every build, so macOS forgets the privacy grants). A named
+    certificate from the keychain keeps the same designated requirement across builds, so grants survive."""
     plist_path = app / "Contents" / "Info.plist"
     info = plistlib.loads(plist_path.read_bytes())
     info["NSMicrophoneUsageDescription"] = MIC_REASON
     info["LSUIElement"] = not dock
     plist_path.write_bytes(plistlib.dumps(info))
-    run(["codesign", "--force", "--deep", "--sign", "-", str(app)])
+    run(["codesign", "--force", "--deep", "--sign", identity, str(app)])
+    print("Signed ad hoc (privacy grants are lost on every rebuild)." if identity == "-" else f"Signed with {identity!r}.")
 
 
 def assemble(app: Path, args: argparse.Namespace) -> Path:
@@ -111,13 +118,17 @@ def main() -> int:
     parser.add_argument("--dest", help="assemble the folder here instead of dist/<name>")
     parser.add_argument("--dock", action="store_true", help="show a Dock icon")
     parser.add_argument("--no-env", action="store_true", help="do not copy .env into the folder")
+    parser.add_argument(
+        "--sign-identity", default=os.environ.get("CODESIGN_IDENTITY", "-"),
+        help="keychain certificate to sign with (see `security find-identity -p codesigning`); default: $CODESIGN_IDENTITY or ad hoc",
+    )
     args = parser.parse_args()
     if sys.platform != "darwin":
         print("This script builds the macOS app; use build_exe.ps1 on Windows.")
         return 1
     ensure_pyinstaller()
     app = build(args)
-    patch_and_sign(app, args.dock)
+    patch_and_sign(app, args.dock, args.sign_identity)
     folder = assemble(app, args)
     print(f"\nBuilt {folder}  ({folder_size_mb(folder) / 1000:.2f} GB)")
     print(f"Next: open {folder / (args.name + '.app')} (the folder's .env and context/ are used).")

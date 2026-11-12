@@ -7,6 +7,9 @@
 #   ./build_mac.sh --dock           keep a Dock icon (default: none)
 #   ./build_mac.sh --no-env         do not copy .env into the folder
 #   ./build_mac.sh --skip-build     do not rebuild; only refresh the folder and re-run the self-test
+#   ./build_mac.sh --sign-identity "Apple Development: you@example.com (TEAMID)"
+#                                   sign with a keychain certificate (or set CODESIGN_IDENTITY) so macOS keeps
+#                                   the Accessibility / Input Monitoring grants across rebuilds; default is ad hoc
 #
 # The app reads .env, context/ and prompts/ from the folder that holds the .app, so move the folder as a whole.
 # Files already in the folder (an edited .env or context/) are never overwritten. Nothing here reads .env.
@@ -23,7 +26,8 @@ while [[ $# -gt 0 ]]; do
     --dock) PY_ARGS+=(--dock) ;;
     --no-env) PY_ARGS+=(--no-env) ;;
     --skip-build) SKIP_BUILD=1 ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    --sign-identity) PY_ARGS+=(--sign-identity "${2:?--sign-identity needs a certificate name}"); shift ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1 (try --help)"; exit 2 ;;
   esac
   shift
@@ -66,7 +70,9 @@ cat <<MSG
 Done: $FOLDER
   $APP_NAME.app   .env   context/   HOW_TO_RUN.txt
 First launch: allow Microphone, and add the app under System Settings > Privacy & Security >
-Screen Recording, Accessibility and Input Monitoring (asked again after every rebuild).
+Screen Recording, Accessibility ("Device Control and Data Access") and Input Monitoring. Ad-hoc builds lose
+these after every rebuild (run tccutil reset ... com.local.aimeetingcompanion, then add them again); a build
+signed with --sign-identity keeps them.
 Meeting audio: set the Multi-Output Device (headset + BlackHole 2ch) as the sound output.
 Quit the app with Ctrl+Shift+Q. Log: $FOLDER/ai-meeting-companion.log
 MSG
